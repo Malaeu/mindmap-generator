@@ -1,0 +1,44 @@
+[project]
+name = "mindmap-generator"
+version = "0.1.0"
+description = "Intelligent document analysis tool that uses LLMs to generate hierarchical mindmaps"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiofiles>=24.1.0",
+    "aiolimiter>=1.2.1",
+    "aiosqlite>=0.21.0",
+    "anthropic>=0.64.0",
+    "async-timeout>=5.0.1",
+    "fuzzywuzzy>=0.18.0",
+    "google-genai>=1.31.0",
+    "numpy>=2.3.2",
+    "openai>=1.102.0",
+    "psutil>=7.0.0",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-mock>=3.14.1",
+    "python-decouple>=3.8",
+    "python-levenshtein>=0.27.1",
+    "rich>=14.1.0",
+    "spacy>=3.8.7",
+    "sqlalchemy>=2.0.43",
+    "sqlmodel>=0.0.24",
+    "termcolor>=3.1.0",
+    "tiktoken>=0.11.0",
+    "transformers>=4.55.4",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+fix = true
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM", "I"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"

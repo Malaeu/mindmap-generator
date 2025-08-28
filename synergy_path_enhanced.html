@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNERGY PATH: Enhanced Knowledge Graph</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 100%);
+            color: #0f0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        
+        #legend h3 {
+            color: #0ff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #0ff;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #fff;
+            border-radius: 50%;
+        }
+        
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        #info-panel h2 {
+            color: #0ff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #0ff;
+        }
+        
+        .stage-info {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 3px solid #0f0;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .stage-info.active {
+            background: rgba(0, 255, 255, 0.1);
+            border-left-color: #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .concept-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            background: rgba(255, 255, 0, 0.2);
+            border: 1px solid #ff0;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #ff0;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border: 2px solid #0f0;
+            border-radius: 10px;
+        }
+        
+        button {
+            background: rgba(0, 255, 0, 0.1);
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+        
+        button:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            transform: scale(1.05);
+        }
+        
+        #node-info {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ff0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            pointer-events: none;
+            max-width: 300px;
+            font-size: 12px;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        }
+        
+        #node-info h4 {
+            color: #ff0;
+            margin-bottom: 8px;
+        }
+        
+        .dependency-list {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+        
+        .dependency-item {
+            color: #0ff;
+            font-size: 11px;
+            margin: 3px 0;
+        }
+        
+        #connection-info {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #f0f;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            max-width: 250px;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s;
+        }
+        
+        .loading-text {
+            color: #0f0;
+            font-size: 24px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loading">
+        <div class="loading-text">INITIALIZING SYNERGY NETWORK...</div>
+    </div>
+    
+    <div id="canvas-container"></div>
+    
+    <div id="legend">
+        <h3>🎨 COLOR CODING</h3>
+        <div class="legend-item">
+            <div class="color-box" style="background: #00ff00;"></div>
+            <span>Stage 1: Infinity Foundations</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #00ffff;"></div>
+            <span>Stage 2: Riemann → Spectral</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #ffff00;"></div>
+            <span>Stage 3: Hilbert-Pólya</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #ff00ff;"></div>
+            <span>Stage 4: Explicit Formula</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #ff0000;"></div>
+            <span>Stage 5: PSD Breakthrough</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #ffffff;"></div>
+            <span>Stage 6: VME Architecture</span>
+        </div>
+        <hr style="margin: 10px 0; border-color: #333;">
+        <div class="legend-item">
+            <div class="color-box" style="background: radial-gradient(circle, #fff, transparent);"></div>
+            <span>Node size = Importance</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: linear-gradient(90deg, #0f0, #00f);"></div>
+            <span>Connection = Dependency</span>
+        </div>
+    </div>
+    
+    <div id="info-panel">
+        <h2>📊 KNOWLEDGE GRAPH STRUCTURE</h2>
+        
+        <div class="stage-info" id="stage-1-info">
+            <h4>Stage 1: FOUNDATIONS</h4>
+            <div>Base concepts: <span class="concept-badge">∞</span> <span class="concept-badge">ℵ₀</span> <span class="concept-badge">Bijection</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">
+                Foundation of set theory and cardinality
+            </div>
+        </div>
+        
+        <div class="stage-info" id="stage-2-info">
+            <h4>Stage 2: RIEMANN CONNECTION</h4>
+            <div>Concepts: <span class="concept-badge">ζ(s)</span> <span class="concept-badge">Euler Product</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">
+                Linking primes to complex analysis
+            </div>
+        </div>
+        
+        <div class="stage-info" id="stage-3-info">
+            <h4>Stage 3: OPERATOR THEORY</h4>
+            <div>Key: <span class="concept-badge">H=H*</span> <span class="concept-badge">Spectral</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">
+                Quantum mechanical interpretation
+            </div>
+        </div>
+        
+        <div class="stage-info" id="stage-4-info">
+            <h4>Stage 4: EXPLICIT FORMULA</h4>
+            <div>Split: <span class="concept-badge">A-block</span> <span class="concept-badge">P-block</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">
+                Archimidean + Prime decomposition
+            </div>
+        </div>
+        
+        <div class="stage-info active" id="stage-5-info">
+            <h4>Stage 5: ⚡ BREAKTHROUGH</h4>
+            <div>Innovation: <span class="concept-badge">DPSS</span> <span class="concept-badge">Z=I</span> <span class="concept-badge">A₁₂≈-P₁₂</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #0ff;">
+                INTERFERENCE CANCELLATION!
+            </div>
+        </div>
+        
+        <div class="stage-info" id="stage-6-info">
+            <h4>Stage 6: VME FRAMEWORK</h4>
+            <div>Components: <span class="concept-badge">M</span> <span class="concept-badge">E</span> <span class="concept-badge">M</span> <span class="concept-badge">SP</span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">
+                Memory-Error-Modulus-Spectral Phase
+            </div>
+        </div>
+    </div>
+    
+    <div id="node-info"></div>
+    
+    <div id="connection-info">
+        <h4 style="color: #f0f;">CONNECTION TYPE</h4>
+        <div id="connection-details"></div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="animatePath()">🚀 ANIMATE PATH</button>
+        <button onclick="showDependencies()">🔗 SHOW DEPENDENCIES</button>
+        <button onclick="focusBreakthrough()">💥 FOCUS PSD</button>
+        <button onclick="toggleLabels()">📝 TOGGLE LABELS</button>
+        <button onclick="resetView()">🔄 RESET</button>
+    </div>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        let raycaster, mouse;
+        let nodes = {};
+        let connections = [];
+        let labels = [];
+        let showLabelsFlag = true;
+        
+        // Complete knowledge graph with dependencies
+        const knowledgeGraph = {
+            nodes: [
+                // Stage 1: Foundations (Green)
+                {id: 'infinity', label: 'Mathematical\nInfinity', stage: 1, color: 0x00ff00, size: 8, deps: [], importance: 10},
+                {id: 'bijection', label: 'Bijection\nℕ↔ℤ', stage: 1, color: 0x00ff00, size: 6, deps: ['infinity'], importance: 8},
+                {id: 'aleph', label: 'ℵ₀\nCountable', stage: 1, color: 0x00ff00, size: 7, deps: ['infinity'], importance: 9},
+                {id: 'diagonal', label: 'Diagonal\nArgument', stage: 1, color: 0x00ff00, size: 6, deps: ['aleph'], importance: 8},
+                {id: 'continuum', label: 'Continuum\n2^ℵ₀', stage: 1, color: 0x00ff00, size: 6, deps: ['aleph', 'diagonal'], importance: 7},
+                
+                // Stage 2: Riemann (Cyan)
+                {id: 'zeta', label: 'ζ(s)\nZeta Function', stage: 2, color: 0x00ffff, size: 9, deps: ['infinity'], importance: 10},
+                {id: 'euler-product', label: 'Euler\nProduct', stage: 2, color: 0x00ffff, size: 7, deps: ['zeta'], importance: 9},
+                {id: 'critical-line', label: 'Critical Line\nRe(s)=1/2', stage: 2, color: 0x00ffff, size: 8, deps: ['zeta'], importance: 9},
+                {id: 'primes', label: 'Prime\nNumbers', stage: 2, color: 0x00ffff, size: 6, deps: ['euler-product'], importance: 8},
+                
+                // Stage 3: Operator Theory (Yellow)
+                {id: 'operators', label: 'Linear\nOperators', stage: 3, color: 0xffff00, size: 8, deps: ['zeta'], importance: 9},
+                {id: 'self-adjoint', label: 'Self-Adjoint\nH=H*', stage: 3, color: 0xffff00, size: 8, deps: ['operators'], importance: 9},
+                {id: 'spectral', label: 'Spectral\nTheory', stage: 3, color: 0xffff00, size: 7, deps: ['self-adjoint'], importance: 8},
+                {id: 'hilbert-space', label: 'Hilbert\nSpace', stage: 3, color: 0xffff00, size: 7, deps: ['operators'], importance: 8},
+                {id: 'determinant', label: 'det₂(I+zK)\nDeterminant', stage: 3, color: 0xffff00, size: 6, deps: ['hilbert-space', 'spectral'], importance: 7},
+                
+                // Stage 4: Explicit Formula (Magenta)
+                {id: 'weyl', label: 'Weyl\nFormula', stage: 4, color: 0xff00ff, size: 8, deps: ['spectral', 'critical-line'], importance: 9},
+                {id: 'test-functions', label: 'Test\nFunctions', stage: 4, color: 0xff00ff, size: 7, deps: ['weyl'], importance: 8},
+                {id: 'archimidean', label: 'Archimidean\nA-block', stage: 4, color: 0xff00ff, size: 7, deps: ['test-functions'], importance: 8},
+                {id: 'prime-block', label: 'Prime\nP-block', stage: 4, color: 0xff00ff, size: 7, deps: ['test-functions', 'primes'], importance: 8},
+                {id: 'explicit', label: 'Explicit\nFormula', stage: 4, color: 0xff00ff, size: 8, deps: ['archimidean', 'prime-block'], importance: 9},
+                
+                // Stage 5: PSD Breakthrough (Red) - THE KEY!
+                {id: 'dpss', label: 'DPSS/Slepian\nWindows', stage: 5, color: 0xff0000, size: 9, deps: ['test-functions'], importance: 10},
+                {id: 'bandlimit', label: 'Bandlimit\n[-B,B]', stage: 5, color: 0xff0000, size: 6, deps: ['dpss'], importance: 7},
+                {id: 'zero-calib', label: 'Z-Calibration\nZ=I', stage: 5, color: 0xff0000, size: 8, deps: ['dpss', 'weyl'], importance: 9},
+                {id: 'overlap', label: 'Controlled\nOverlap δ', stage: 5, color: 0xff0000, size: 7, deps: ['dpss'], importance: 8},
+                {id: 'interference', label: '⚡INTERFERENCE\nA₁₂≈-P₁₂', stage: 5, color: 0xff0000, size: 10, deps: ['overlap', 'archimidean', 'prime-block'], importance: 10},
+                {id: 'psd', label: '💥PSD\nZ-A-P≥0', stage: 5, color: 0xff0000, size: 10, deps: ['zero-calib', 'interference', 'explicit'], importance: 10},
+                
+                // Stage 6: VME Architecture (White)
+                {id: 'vme', label: 'VME\nArchitecture', stage: 6, color: 0xffffff, size: 8, deps: ['psd'], importance: 9},
+                {id: 'memory', label: 'MEMORY\nComponent', stage: 6, color: 0xffffff, size: 6, deps: ['vme'], importance: 7},
+                {id: 'error', label: 'ERROR\nTracking', stage: 6, color: 0xffffff, size: 6, deps: ['vme'], importance: 7},
+                {id: 'modulus', label: 'MODULUS\nControl', stage: 6, color: 0xffffff, size: 6, deps: ['vme'], importance: 7},
+                {id: 'phase', label: 'SPECTRAL\nPHASE', stage: 6, color: 0xffffff, size: 6, deps: ['vme'], importance: 7}
+            ],
+            
+            connections: [
+                // Critical path connections (thick lines)
+                {from: 'infinity', to: 'zeta', type: 'foundation', strength: 0.8},
+                {from: 'zeta', to: 'operators', type: 'spectral-bridge', strength: 0.9},
+                {from: 'operators', to: 'weyl', type: 'explicit-bridge', strength: 0.9},
+                {from: 'weyl', to: 'dpss', type: 'window-bridge', strength: 1.0},
+                {from: 'dpss', to: 'psd', type: 'breakthrough', strength: 1.0},
+                
+                // Interference connections (special!)
+                {from: 'archimidean', to: 'interference', type: 'A-component', strength: 0.9},
+                {from: 'prime-block', to: 'interference', type: 'P-component', strength: 0.9},
+                {from: 'overlap', to: 'interference', type: 'control', strength: 1.0},
+                
+                // Supporting connections
+                {from: 'bijection', to: 'euler-product', type: 'counting', strength: 0.5},
+                {from: 'self-adjoint', to: 'spectral', type: 'theory', strength: 0.7},
+                {from: 'hilbert-space', to: 'determinant', type: 'space', strength: 0.6},
+                {from: 'critical-line', to: 'psd', type: 'zeros', strength: 0.8},
+                
+                // VME connections
+                {from: 'psd', to: 'vme', type: 'implementation', strength: 0.9},
+                {from: 'interference', to: 'memory', type: 'storage', strength: 0.5},
+                {from: 'zero-calib', to: 'error', type: 'tracking', strength: 0.5}
+            ]
+        };
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x0a0a0a, 50, 400);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(50, 80, 120);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x0a0a0a);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.5;
+            controls.zoomSpeed = 0.8;
+            controls.maxDistance = 300;
+            controls.minDistance = 30;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(100, 100, 50);
+            directionalLight1.castShadow = true;
+            scene.add(directionalLight1);
+            
+            const pointLight1 = new THREE.PointLight(0x00ff00, 0.5, 150);
+            pointLight1.position.set(-50, 50, 0);
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0xff0000, 0.5, 150);
+            pointLight2.position.set(50, 50, 0);
+            scene.add(pointLight2);
+            
+            // Raycaster for interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Create the network
+            createNetwork();
+            
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('click', onMouseClick);
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 1000);
+            }, 1000);
+            
+            // Start animation
+            animate();
+        }
+        
+        function createNetwork() {
+            const stageRadius = [0, 40, 35, 30, 25, 20, 15]; // Radius for each stage
+            const stageHeight = [0, -30, -15, 0, 15, 30, 45]; // Height for each stage
+            const stageNodeCount = {};
+            
+            // Count nodes per stage
+            knowledgeGraph.nodes.forEach(nodeData => {
+                if (!stageNodeCount[nodeData.stage]) {
+                    stageNodeCount[nodeData.stage] = 0;
+                }
+                stageNodeCount[nodeData.stage]++;
+            });
+            
+            const stageCurrentIndex = {};
+            
+            // Create nodes
+            knowledgeGraph.nodes.forEach(nodeData => {
+                if (!stageCurrentIndex[nodeData.stage]) {
+                    stageCurrentIndex[nodeData.stage] = 0;
+                }
+                
+                const radius = stageRadius[nodeData.stage];
+                const height = stageHeight[nodeData.stage];
+                const totalInStage = stageNodeCount[nodeData.stage];
+                const currentIndex = stageCurrentIndex[nodeData.stage];
+                const angle = (currentIndex / totalInStage) * Math.PI * 2;
+                
+                // Node geometry
+                const geometry = new THREE.SphereGeometry(nodeData.size / 2, 32, 32);
+                const material = new THREE.MeshPhongMaterial({
+                    color: nodeData.color,
+                    emissive: nodeData.color,
+                    emissiveIntensity: 0.3,
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const node = new THREE.Mesh(geometry, material);
+                node.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+                node.castShadow = true;
+                node.receiveShadow = true;
+                node.userData = nodeData;
+                
+                // Add glowing effect
+                const glowGeometry = new THREE.SphereGeometry(nodeData.size / 2 + 1, 16, 16);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: nodeData.color,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                node.add(glow);
+                
+                // Add text label
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 512;
+                canvas.height = 256;
+                
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                context.font = 'bold 32px Arial';
+                context.fillStyle = '#fff';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                
+                const lines = nodeData.label.split('\n');
+                lines.forEach((line, i) => {
+                    context.fillText(line, 256, 128 + (i - lines.length/2 + 0.5) * 40);
+                });
+                
+                // Add node ID in corner
+                context.font = '24px Arial';
+                context.fillStyle = nodeData.stage <= 3 ? '#0f0' : '#f0f';
+                context.fillText(`[${nodeData.id.substring(0, 3).toUpperCase()}]`, 50, 30);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true
+                });
+                
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.scale.set(15, 7.5, 1);
+                sprite.position.y = nodeData.size / 2 + 5;
+                node.add(sprite);
+                labels.push(sprite);
+                
+                scene.add(node);
+                nodes[nodeData.id] = node;
+                
+                stageCurrentIndex[nodeData.stage]++;
+            });
+            
+            // Create connections
+            knowledgeGraph.connections.forEach(connData => {
+                const fromNode = nodes[connData.from];
+                const toNode = nodes[connData.to];
+                
+                if (fromNode && toNode) {
+                    const points = [];
+                    points.push(fromNode.position.clone());
+                    
+                    // Create curved path
+                    const midPoint = new THREE.Vector3(
+                        (fromNode.position.x + toNode.position.x) / 2,
+                        (fromNode.position.y + toNode.position.y) / 2 + 10,
+                        (fromNode.position.z + toNode.position.z) / 2
+                    );
+                    points.push(midPoint);
+                    points.push(toNode.position.clone());
+                    
+                    const curve = new THREE.CatmullRomCurve3(points);
+                    const tubeGeometry = new THREE.TubeGeometry(
+                        curve, 
+                        32, 
+                        0.2 + connData.strength * 0.3, 
+                        8, 
+                        false
+                    );
+                    
+                    // Color based on connection type
+                    let color = 0x00ff00;
+                    if (connData.type === 'breakthrough') color = 0xff0000;
+                    else if (connData.type === 'A-component' || connData.type === 'P-component') color = 0xffff00;
+                    else if (connData.type === 'control') color = 0xff00ff;
+                    else if (connData.strength > 0.8) color = 0x00ffff;
+                    
+                    const material = new THREE.MeshBasicMaterial({
+                        color: color,
+                        transparent: true,
+                        opacity: 0.3 + connData.strength * 0.4
+                    });
+                    
+                    const connection = new THREE.Mesh(tubeGeometry, material);
+                    connection.userData = connData;
+                    scene.add(connection);
+                    connections.push(connection);
+                }
+            });
+            
+            // Add dependency numbers
+            knowledgeGraph.nodes.forEach(nodeData => {
+                if (nodeData.deps.length > 0) {
+                    const node = nodes[nodeData.id];
+                    
+                    // Create dependency indicator
+                    const depGeometry = new THREE.BoxGeometry(2, 1, 0.1);
+                    const depMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xffff00,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    const depMesh = new THREE.Mesh(depGeometry, depMaterial);
+                    depMesh.position.set(0, -nodeData.size/2 - 2, 0);
+                    node.add(depMesh);
+                    
+                    // Add text showing number of dependencies
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 128;
+                    canvas.height = 64;
+                    const ctx = canvas.getContext('2d');
+                    ctx.font = 'bold 48px Arial';
+                    ctx.fillStyle = '#000';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(nodeData.deps.length.toString(), 64, 45);
+                    
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const spriteMat = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true
+                    });
+                    const depSprite = new THREE.Sprite(spriteMat);
+                    depSprite.scale.set(2, 1, 1);
+                    depSprite.position.copy(depMesh.position);
+                    node.add(depSprite);
+                }
+            });
+        }
+        
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(Object.values(nodes));
+            
+            const nodeInfo = document.getElementById('node-info');
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                const data = node.userData;
+                
+                let depList = '';
+                if (data.deps && data.deps.length > 0) {
+                    depList = '<div class="dependency-list"><strong>Dependencies:</strong><br>';
+                    data.deps.forEach(dep => {
+                        const depNode = knowledgeGraph.nodes.find(n => n.id === dep);
+                        if (depNode) {
+                            depList += `<div class="dependency-item">← ${depNode.label.replace('\n', ' ')}</div>`;
+                        }
+                    });
+                    depList += '</div>';
+                }
+                
+                nodeInfo.innerHTML = `
+                    <h4>${data.label.replace('\n', ' ')}</h4>
+                    <div>Stage: ${data.stage}</div>
+                    <div>Importance: ${data.importance}/10</div>
+                    <div>ID: ${data.id}</div>
+                    ${depList}
+                `;
+                
+                nodeInfo.style.display = 'block';
+                nodeInfo.style.left = (event.clientX + 15) + 'px';
+                nodeInfo.style.top = (event.clientY - 50) + 'px';
+                
+                document.body.style.cursor = 'pointer';
+            } else {
+                nodeInfo.style.display = 'none';
+                document.body.style.cursor = 'default';
+            }
+        }
+        
+        function onMouseClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(Object.values(nodes));
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                focusOnNode(node);
+            }
+        }
+        
+        function focusOnNode(node) {
+            const targetPos = node.position.clone();
+            targetPos.y += 20;
+            targetPos.z += 30;
+            
+            new TWEEN.Tween(camera.position)
+                .to(targetPos, 1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to(node.position, 1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => controls.update())
+                .start();
+            
+            // Highlight connected nodes
+            highlightConnections(node.userData.id);
+        }
+        
+        function highlightConnections(nodeId) {
+            // Reset all nodes
+            Object.values(nodes).forEach(n => {
+                n.material.opacity = 0.3;
+            });
+            
+            // Highlight target node
+            nodes[nodeId].material.opacity = 1;
+            
+            // Highlight dependencies
+            const nodeData = knowledgeGraph.nodes.find(n => n.id === nodeId);
+            if (nodeData) {
+                nodeData.deps.forEach(dep => {
+                    if (nodes[dep]) {
+                        nodes[dep].material.opacity = 0.8;
+                    }
+                });
+                
+                // Highlight dependents
+                knowledgeGraph.nodes.forEach(n => {
+                    if (n.deps.includes(nodeId) && nodes[n.id]) {
+                        nodes[n.id].material.opacity = 0.8;
+                    }
+                });
+            }
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                Object.values(nodes).forEach(n => {
+                    n.material.opacity = 0.9;
+                });
+            }, 3000);
+        }
+        
+        function animatePath() {
+            const path = [
+                'infinity', 'aleph', 'diagonal',
+                'zeta', 'euler-product', 'critical-line',
+                'operators', 'self-adjoint', 'spectral',
+                'weyl', 'test-functions', 'archimidean', 'prime-block',
+                'dpss', 'overlap', 'interference', 'psd',
+                'vme'
+            ];
+            
+            let index = 0;
+            
+            function nextNode() {
+                if (index >= path.length) {
+                    // Show final message
+                    document.getElementById('connection-info').style.display = 'block';
+                    document.getElementById('connection-details').innerHTML = 
+                        '<strong style="color: #0ff;">PATH COMPLETE!</strong><br>' +
+                        'From Infinity to PSD<br>' +
+                        'Through INTERFERENCE';
+                    return;
+                }
+                
+                const nodeId = path[index];
+                const node = nodes[nodeId];
+                if (node) {
+                    focusOnNode(node);
+                    
+                    // Pulse effect
+                    new TWEEN.Tween(node.scale)
+                        .to({x: 1.5, y: 1.5, z: 1.5}, 500)
+                        .chain(
+                            new TWEEN.Tween(node.scale)
+                                .to({x: 1, y: 1, z: 1}, 500)
+                        )
+                        .start();
+                    
+                    // Update stage info
+                    document.querySelectorAll('.stage-info').forEach(el => {
+                        el.classList.remove('active');
+                    });
+                    const stageNum = node.userData.stage;
+                    document.getElementById(`stage-${stageNum}-info`).classList.add('active');
+                }
+                
+                index++;
+                setTimeout(nextNode, 2000);
+            }
+            
+            nextNode();
+        }
+        
+        function showDependencies() {
+            // Toggle dependency visualization
+            connections.forEach(conn => {
+                if (conn.userData.type === 'foundation' || 
+                    conn.userData.type === 'breakthrough' ||
+                    conn.userData.type === 'A-component' ||
+                    conn.userData.type === 'P-component') {
+                    
+                    new TWEEN.Tween(conn.material)
+                        .to({opacity: 0.9}, 500)
+                        .chain(
+                            new TWEEN.Tween(conn.material)
+                                .to({opacity: 0.3 + conn.userData.strength * 0.4}, 1500)
+                        )
+                        .start();
+                }
+            });
+        }
+        
+        function focusBreakthrough() {
+            // Focus on the PSD and interference nodes
+            const psdNode = nodes['psd'];
+            const interferenceNode = nodes['interference'];
+            
+            if (psdNode && interferenceNode) {
+                const midPoint = new THREE.Vector3(
+                    (psdNode.position.x + interferenceNode.position.x) / 2,
+                    (psdNode.position.y + interferenceNode.position.y) / 2,
+                    (psdNode.position.z + interferenceNode.position.z) / 2
+                );
+                
+                new TWEEN.Tween(controls.target)
+                    .to(midPoint, 1500)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .onUpdate(() => controls.update())
+                    .start();
+                
+                const camPos = midPoint.clone();
+                camPos.y += 30;
+                camPos.z += 50;
+                
+                new TWEEN.Tween(camera.position)
+                    .to(camPos, 1500)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .start();
+                
+                // Highlight the breakthrough nodes
+                ['dpss', 'overlap', 'interference', 'psd', 'zero-calib'].forEach(id => {
+                    if (nodes[id]) {
+                        nodes[id].material.emissiveIntensity = 0.8;
+                        setTimeout(() => {
+                            nodes[id].material.emissiveIntensity = 0.3;
+                        }, 3000);
+                    }
+                });
+                
+                // Show connection info
+                document.getElementById('connection-info').style.display = 'block';
+                document.getElementById('connection-details').innerHTML = 
+                    '<strong>INTERFERENCE:</strong><br>' +
+                    'A₁₂ (Archimidean) +<br>' +
+                    'P₁₂ (Prime) ≈ 0<br><br>' +
+                    'Through controlled overlap!';
+            }
+        }
+        
+        function toggleLabels() {
+            showLabelsFlag = !showLabelsFlag;
+            labels.forEach(label => {
+                label.visible = showLabelsFlag;
+            });
+        }
+        
+        function resetView() {
+            camera.position.set(50, 80, 120);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            
+            Object.values(nodes).forEach(node => {
+                node.material.opacity = 0.9;
+                node.material.emissiveIntensity = 0.3;
+            });
+            
+            document.getElementById('connection-info').style.display = 'none';
+            document.querySelectorAll('.stage-info').forEach(el => {
+                el.classList.remove('active');
+            });
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            TWEEN.update();
+            controls.update();
+            
+            // Gentle rotation of nodes
+            Object.values(nodes).forEach(node => {
+                node.rotation.y += 0.005;
+                // Floating effect
+                node.position.y += Math.sin(Date.now() * 0.001 + node.userData.stage) * 0.01;
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize everything
+        init();
+    </script>
+</body>
+</html>

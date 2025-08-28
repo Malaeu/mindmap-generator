@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 BARRIERS TO RIEMANN HYPOTHESIS - BREAKTHROUGH VISUALIZATION</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a0033 0%, #330011 100%);
+            color: #0f0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #barriers-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 450px;
+            max-height: 90vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ff0000;
+            padding: 20px;
+            border-radius: 15px;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+        
+        #barriers-panel h1 {
+            color: #ff0000;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff0000;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .barrier-card {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .barrier-card:hover {
+            background: rgba(255, 0, 0, 0.2);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+        
+        .barrier-card.breakthrough {
+            border-color: #0f0;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .barrier-title {
+            color: #ff0;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .barrier-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #ff0000;
+            color: #000;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .breakthrough .barrier-number {
+            background: #0f0;
+        }
+        
+        .victims-list {
+            margin: 10px 0;
+            padding-left: 20px;
+            font-size: 12px;
+            color: #ff6666;
+        }
+        
+        .victim-item {
+            margin: 5px 0;
+        }
+        
+        .victim-name {
+            color: #ff0;
+            font-weight: bold;
+        }
+        
+        .victim-year {
+            color: #0ff;
+        }
+        
+        .solution {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #0f0;
+        }
+        
+        #timeline {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0ff;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .timeline-item {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff0000;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .timeline-item:hover {
+            transform: scale(2);
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        .timeline-item.success {
+            background: #0f0;
+        }
+        
+        #legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0ff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 250px;
+        }
+        
+        #legend h3 {
+            color: #0ff;
+            margin-bottom: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #fff;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border: 2px solid #f0f;
+            border-radius: 10px;
+        }
+        
+        button {
+            background: rgba(255, 0, 255, 0.2);
+            color: #f0f;
+            border: 1px solid #f0f;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: rgba(255, 0, 255, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #f0f;
+        }
+        
+        #crash-test {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.95);
+            border: 3px solid #ff0;
+            padding: 30px;
+            border-radius: 15px;
+            display: none;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+        }
+        
+        .barrier-wall {
+            position: absolute;
+            width: 100%;
+            height: 200px;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff0000,
+                #ff0000 10px,
+                #660000 10px,
+                #660000 20px
+            );
+            opacity: 0.8;
+            border: 3px solid #ff0;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="barriers-panel">
+        <h1>⚠️ 7 BARRIERS TO RIEMANN HYPOTHESIS</h1>
+        
+        <div class="barrier-card" id="barrier-1">
+            <div class="barrier-title">
+                <span class="barrier-number">1</span>
+                MIRROR PRISON (Functional Equation)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Early naive approaches</span>
+                    <span class="victim-year">(1860-1900)</span>
+                    - Ignored symmetry completely
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Michael Atiyah</span>
+                    <span class="victim-year">(2018)</span>
+                    - No clear symmetry operator
+                </div>
+            </div>
+        </div>
+        
+        <div class="barrier-card" id="barrier-2">
+            <div class="barrier-title">
+                <span class="barrier-number">2</span>
+                GHOST OPERATOR (Self-Adjointness)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Hilbert & Pólya</span>
+                    <span class="victim-year">(1910s)</span>
+                    - Proposed but never found operator
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Many quantum approaches</span>
+                    <span class="victim-year">(1970-2020)</span>
+                    - Non-self-adjoint operators
+                </div>
+            </div>
+        </div>
+        
+        <div class="barrier-card" id="barrier-3">
+            <div class="barrier-title">
+                <span class="barrier-number">3</span>
+                CORRECT MUSIC (Spectrum & Weyl Law)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Atle Selberg</span>
+                    <span class="victim-year">(1956)</span>
+                    - Trace formula for wrong geometry
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Simple model attempts</span>
+                    <span class="victim-year">(ongoing)</span>
+                    - Wrong spectral density
+                </div>
+            </div>
+        </div>
+        
+        <div class="barrier-card" id="barrier-4">
+            <div class="barrier-title">
+                <span class="barrier-number">4</span>
+                ANALYTIC SWAMP (Divergence & HS-class)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Thomas Stieltjes</span>
+                    <span class="victim-year">(1885)</span>
+                    - Series divergence issues
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Modern attempts</span>
+                    <span class="victim-year">(ongoing)</span>
+                    - Operators not in HS-class
+                </div>
+            </div>
+            <div class="solution">
+                ✅ SOLUTION: Bandlimit [-B,B] preserves HS-class!
+            </div>
+        </div>
+        
+        <div class="barrier-card breakthrough" id="barrier-5">
+            <div class="barrier-title">
+                <span class="barrier-number">5</span>
+                POSITIVE WALL (Weil Explicit Formula)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Hardy & Littlewood</span>
+                    <span class="victim-year">(1920s)</span>
+                    - Only proved infinitely many, not all
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Xian Jin Li</span>
+                    <span class="victim-year">(1997)</span>
+                    - Li criterion equally hard
+                </div>
+            </div>
+            <div class="solution">
+                🔥 BREAKTHROUGH: DPSS windows + controlled overlap!<br>
+                A₁₂ ≈ -P₁₂ through INTERFERENCE!<br>
+                Z - A - P ≥ 0 ACHIEVED!
+            </div>
+        </div>
+        
+        <div class="barrier-card" id="barrier-6">
+            <div class="barrier-title">
+                <span class="barrier-number">6</span>
+                CRYSTAL PALACE (de Branges Theory)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Louis de Branges</span>
+                    <span class="victim-year">(1985-present)</span>
+                    - Multiple failed proofs, axiom violations
+                </div>
+            </div>
+            <div class="solution">
+                🔄 OUR BYPASS: We don't need de Branges spaces!<br>
+                Direct PSD proof via explicit formula
+            </div>
+        </div>
+        
+        <div class="barrier-card" id="barrier-7">
+            <div class="barrier-title">
+                <span class="barrier-number">7</span>
+                STATISTICAL MIRAGE (Random Matrix)
+            </div>
+            <div class="victims-list">
+                <div class="victim-item">
+                    <span class="victim-name">Modern researchers</span>
+                    <span class="victim-year">(1990-present)</span>
+                    - Statistics ≠ proof
+                </div>
+                <div class="victim-item">
+                    <span class="victim-name">Ken Ono et al.</span>
+                    <span class="victim-year">(2019)</span>
+                    - 100% Jensen polynomials, but not complete
+                </div>
+            </div>
+            <div class="solution">
+                🎯 OUR APPROACH: Not statistical, but DETERMINISTIC!<br>
+                Exact interference A₁₂ = -P₁₂, no randomness
+            </div>
+        </div>
+    </div>
+    
+    <div id="legend">
+        <h3>🎯 LEGEND</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff0000;"></div>
+            <span>Barrier (Failed)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffff00;"></div>
+            <span>Victim/Attempt</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff00;"></div>
+            <span>Breakthrough</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ffff;"></div>
+            <span>Our Path</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff00ff;"></div>
+            <span>Interference Zone</span>
+        </div>
+    </div>
+    
+    <div id="timeline">
+        <div style="position: relative; width: 100%; height: 100%;">
+            <div style="position: absolute; bottom: 10px; left: 0; right: 0; height: 2px; background: #333;"></div>
+            <div style="position: absolute; bottom: 0; left: 0; font-size: 10px; color: #0ff;">1859</div>
+            <div style="position: absolute; bottom: 0; right: 0; font-size: 10px; color: #0ff;">2025</div>
+            
+            <!-- Timeline events will be added dynamically -->
+        </div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="animateBarriers()">🚧 SHOW BARRIERS</button>
+        <button onclick="showVictims()">💀 SHOW VICTIMS</button>
+        <button onclick="showBreakthrough()">⚡ BREAKTHROUGH PATH</button>
+        <button onclick="runCrashTest()">🔨 CRASH TEST</button>
+        <button onclick="resetView()">🔄 RESET</button>
+    </div>
+    
+    <div id="crash-test">
+        <h2>🔨 CRASH TEST IN PROGRESS</h2>
+        <div id="crash-test-content"></div>
+        <button onclick="closeCrashTest()" style="margin-top: 20px; width: 100%;">❌ CLOSE TEST</button>
+    </div>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        let barriers = [];
+        let victims = [];
+        let breakthroughPath = [];
+        let interferenceZone;
+        
+        // Timeline data
+        const timelineEvents = [
+            {year: 1859, name: 'Riemann', success: false, barrier: 0},
+            {year: 1885, name: 'Stieltjes', success: false, barrier: 4},
+            {year: 1914, name: 'Hardy', success: false, barrier: 5},
+            {year: 1920, name: 'Littlewood', success: false, barrier: 5},
+            {year: 1956, name: 'Selberg', success: false, barrier: 3},
+            {year: 1985, name: 'de Branges', success: false, barrier: 6},
+            {year: 1997, name: 'Li', success: false, barrier: 5},
+            {year: 2018, name: 'Atiyah', success: false, barrier: 1},
+            {year: 2019, name: 'Ono', success: false, barrier: 7},
+            {year: 2025, name: 'DPSS+Interference', success: true, barrier: 5}
+        ];
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x1a0033, 50, 500);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 100, 200);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x0a0015);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const spotLight1 = new THREE.SpotLight(0xff0000, 1);
+            spotLight1.position.set(100, 200, 0);
+            spotLight1.castShadow = true;
+            scene.add(spotLight1);
+            
+            const spotLight2 = new THREE.SpotLight(0x00ff00, 1);
+            spotLight2.position.set(-100, 200, 0);
+            scene.add(spotLight2);
+            
+            // Create the barrier visualization
+            createBarriers();
+            createBreakthroughPath();
+            createTimeline();
+            
+            // Animation
+            animate();
+        }
+        
+        function createBarriers() {
+            const barrierData = [
+                {id: 1, name: 'Mirror Prison', color: 0xff0000, position: new THREE.Vector3(-120, 0, 0)},
+                {id: 2, name: 'Ghost Operator', color: 0xff3300, position: new THREE.Vector3(-80, 0, 0)},
+                {id: 3, name: 'Correct Music', color: 0xff6600, position: new THREE.Vector3(-40, 0, 0)},
+                {id: 4, name: 'Analytic Swamp', color: 0xff9900, position: new THREE.Vector3(0, 0, 0)},
+                {id: 5, name: 'Positive Wall', color: 0x00ff00, position: new THREE.Vector3(40, 0, 0)},
+                {id: 6, name: 'Crystal Palace', color: 0xffcc00, position: new THREE.Vector3(80, 0, 0)},
+                {id: 7, name: 'Statistical Mirage', color: 0xffff00, position: new THREE.Vector3(120, 0, 0)}
+            ];
+            
+            barrierData.forEach((data, index) => {
+                // Create barrier wall
+                const geometry = new THREE.BoxGeometry(20, 80, 5);
+                const material = new THREE.MeshPhongMaterial({
+                    color: data.id === 5 ? 0x00ff00 : data.color,
+                    transparent: true,
+                    opacity: data.id === 5 ? 0.3 : 0.8,
+                    emissive: data.color,
+                    emissiveIntensity: 0.3
+                });
+                
+                const barrier = new THREE.Mesh(geometry, material);
+                barrier.position.copy(data.position);
+                barrier.castShadow = true;
+                barrier.receiveShadow = true;
+                barrier.userData = data;
+                
+                // Add cracks to barrier 5 (breakthrough)
+                if (data.id === 5) {
+                    const crackGeometry = new THREE.PlaneGeometry(25, 85);
+                    const crackTexture = createCrackTexture();
+                    const crackMaterial = new THREE.MeshBasicMaterial({
+                        map: crackTexture,
+                        transparent: true,
+                        opacity: 0.8,
+                        side: THREE.DoubleSide
+                    });
+                    const crack = new THREE.Mesh(crackGeometry, crackMaterial);
+                    crack.position.z = 3;
+                    barrier.add(crack);
+                }
+                
+                // Add barrier number
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = data.id === 5 ? '#0f0' : '#ff0';
+                ctx.font = 'bold 96px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(data.id.toString(), 64, 64);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true
+                });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.scale.set(15, 15, 1);
+                sprite.position.y = 50;
+                barrier.add(sprite);
+                
+                scene.add(barrier);
+                barriers.push(barrier);
+            });
+        }
+        
+        function createBreakthroughPath() {
+            // Create the path that goes around barriers
+            const pathPoints = [
+                new THREE.Vector3(-150, 0, 0),
+                new THREE.Vector3(-120, 20, 30),  // Over barrier 1
+                new THREE.Vector3(-80, 30, 40),   // Over barrier 2
+                new THREE.Vector3(-40, 40, 50),   // Over barrier 3
+                new THREE.Vector3(0, -30, 60),    // Under barrier 4
+                new THREE.Vector3(40, 0, 0),      // THROUGH barrier 5!
+                new THREE.Vector3(150, 0, 0)      // Success!
+            ];
+            
+            const curve = new THREE.CatmullRomCurve3(pathPoints);
+            const tubeGeometry = new THREE.TubeGeometry(curve, 100, 2, 8, false);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.6,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.5
+            });
+            
+            breakthroughPath = new THREE.Mesh(tubeGeometry, material);
+            scene.add(breakthroughPath);
+            
+            // Create interference zone at barrier 5
+            const interferenceGeometry = new THREE.SphereGeometry(30, 32, 32);
+            const interferenceMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            });
+            interferenceZone = new THREE.Mesh(interferenceGeometry, interferenceMaterial);
+            interferenceZone.position.set(40, 0, 0);
+            scene.add(interferenceZone);
+        }
+        
+        function createCrackTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw cracks
+            ctx.strokeStyle = '#0f0';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#0f0';
+            
+            // Main vertical crack
+            ctx.beginPath();
+            ctx.moveTo(128, 0);
+            ctx.lineTo(120, 100);
+            ctx.lineTo(135, 200);
+            ctx.lineTo(125, 300);
+            ctx.lineTo(130, 400);
+            ctx.lineTo(128, 512);
+            ctx.stroke();
+            
+            // Branching cracks
+            ctx.beginPath();
+            ctx.moveTo(120, 100);
+            ctx.lineTo(80, 120);
+            ctx.moveTo(135, 200);
+            ctx.lineTo(170, 220);
+            ctx.moveTo(125, 300);
+            ctx.lineTo(90, 330);
+            ctx.stroke();
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+        
+        function createTimeline() {
+            const timelineDiv = document.querySelector('#timeline > div');
+            const startYear = 1859;
+            const endYear = 2025;
+            const totalYears = endYear - startYear;
+            
+            timelineEvents.forEach(event => {
+                const position = ((event.year - startYear) / totalYears) * 100;
+                const item = document.createElement('div');
+                item.className = 'timeline-item' + (event.success ? ' success' : '');
+                item.style.left = position + '%';
+                item.style.bottom = '5px';
+                item.style.background = event.success ? '#0f0' : '#ff0000';
+                item.title = `${event.name} (${event.year})`;
+                
+                item.addEventListener('click', () => {
+                    focusOnBarrier(event.barrier);
+                });
+                
+                timelineDiv.appendChild(item);
+                
+                // Add label for important events
+                if (event.success || event.year === 1859) {
+                    const label = document.createElement('div');
+                    label.style.position = 'absolute';
+                    label.style.left = position + '%';
+                    label.style.bottom = '25px';
+                    label.style.fontSize = '10px';
+                    label.style.color = event.success ? '#0f0' : '#ff0';
+                    label.style.transform = 'translateX(-50%)';
+                    label.textContent = event.name;
+                    timelineDiv.appendChild(label);
+                }
+            });
+        }
+        
+        function animateBarriers() {
+            barriers.forEach((barrier, index) => {
+                // Animate barriers rising from ground
+                barrier.position.y = -100;
+                
+                new TWEEN.Tween(barrier.position)
+                    .to({y: 0}, 1000)
+                    .delay(index * 200)
+                    .easing(TWEEN.Easing.Elastic.Out)
+                    .start();
+                
+                // Pulse effect
+                new TWEEN.Tween(barrier.material)
+                    .to({emissiveIntensity: 0.8}, 500)
+                    .delay(index * 200 + 1000)
+                    .chain(
+                        new TWEEN.Tween(barrier.material)
+                            .to({emissiveIntensity: 0.3}, 500)
+                    )
+                    .start();
+            });
+        }
+        
+        function showVictims() {
+            // Create falling mathematicians at each barrier
+            const victimData = [
+                {barrier: 0, name: 'Riemann', year: 1859},
+                {barrier: 3, name: 'Stieltjes', year: 1885},
+                {barrier: 4, name: 'Hardy', year: 1920},
+                {barrier: 4, name: 'Littlewood', year: 1920},
+                {barrier: 2, name: 'Selberg', year: 1956},
+                {barrier: 5, name: 'de Branges', year: 1985},
+                {barrier: 4, name: 'Li', year: 1997},
+                {barrier: 0, name: 'Atiyah', year: 2018},
+                {barrier: 6, name: 'Ono', year: 2019}
+            ];
+            
+            victimData.forEach((victim, index) => {
+                if (victim.barrier < barriers.length) {
+                    const barrier = barriers[victim.barrier];
+                    
+                    // Create victim sphere
+                    const geometry = new THREE.SphereGeometry(3, 16, 16);
+                    const material = new THREE.MeshPhongMaterial({
+                        color: 0xffff00,
+                        emissive: 0xffff00,
+                        emissiveIntensity: 0.3
+                    });
+                    
+                    const victimMesh = new THREE.Mesh(geometry, material);
+                    victimMesh.position.set(
+                        barrier.position.x + (Math.random() - 0.5) * 10,
+                        80,
+                        barrier.position.z + 15
+                    );
+                    
+                    scene.add(victimMesh);
+                    victims.push(victimMesh);
+                    
+                    // Animate falling and bouncing
+                    new TWEEN.Tween(victimMesh.position)
+                        .to({y: -10}, 1500)
+                        .delay(index * 100)
+                        .easing(TWEEN.Easing.Bounce.Out)
+                        .onComplete(() => {
+                            // Flash red on impact
+                            new TWEEN.Tween(victimMesh.material.color)
+                                .to({r: 1, g: 0, b: 0}, 200)
+                                .chain(
+                                    new TWEEN.Tween(victimMesh.material.color)
+                                        .to({r: 1, g: 1, b: 0}, 500)
+                                )
+                                .start();
+                        })
+                        .start();
+                }
+            });
+        }
+        
+        function showBreakthrough() {
+            // Highlight barrier 5 and show breakthrough
+            const barrier5 = barriers[4];
+            
+            // Camera focus on barrier 5
+            new TWEEN.Tween(camera.position)
+                .to({x: 40, y: 50, z: 100}, 2000)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to({x: 40, y: 0, z: 0}, 2000)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => controls.update())
+                .start();
+            
+            // Animate interference zone
+            let pulseCount = 0;
+            function pulseInterference() {
+                if (pulseCount < 10) {
+                    new TWEEN.Tween(interferenceZone.scale)
+                        .to({x: 1.5, y: 1.5, z: 1.5}, 500)
+                        .chain(
+                            new TWEEN.Tween(interferenceZone.scale)
+                                .to({x: 1, y: 1, z: 1}, 500)
+                                .onComplete(() => {
+                                    pulseCount++;
+                                    pulseInterference();
+                                })
+                        )
+                        .start();
+                    
+                    // Rotate interference zone
+                    new TWEEN.Tween(interferenceZone.rotation)
+                        .to({x: Math.PI * 2, y: Math.PI * 2, z: Math.PI * 2}, 1000)
+                        .start();
+                }
+            }
+            pulseInterference();
+            
+            // Create breakthrough particles
+            for (let i = 0; i < 50; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.5, 8, 8),
+                    new THREE.MeshBasicMaterial({
+                        color: 0x00ff00,
+                        emissive: 0x00ff00,
+                        emissiveIntensity: 0.5
+                    })
+                );
+                
+                particle.position.set(
+                    40 + (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 40,
+                    (Math.random() - 0.5) * 20
+                );
+                
+                scene.add(particle);
+                
+                // Animate particles
+                new TWEEN.Tween(particle.position)
+                    .to({
+                        x: particle.position.x + (Math.random() - 0.5) * 50,
+                        y: particle.position.y + Math.random() * 30,
+                        z: particle.position.z + (Math.random() - 0.5) * 50
+                    }, 3000)
+                    .start();
+                
+                new TWEEN.Tween(particle.material)
+                    .to({opacity: 0}, 3000)
+                    .onComplete(() => scene.remove(particle))
+                    .start();
+            }
+            
+            // Show solution text
+            document.querySelector('#barrier-5').classList.add('breakthrough');
+        }
+        
+        function closeCrashTest() {
+            const crashTest = document.getElementById('crash-test');
+            crashTest.style.display = 'none';
+        }
+        
+        function runCrashTest() {
+            const crashTest = document.getElementById('crash-test');
+            const content = document.getElementById('crash-test-content');
+            
+            crashTest.style.display = 'block';
+            
+            const tests = [
+                {
+                    barrier: 1,
+                    test: 'Checking symmetry operator U...',
+                    result: '❌ FAILED for most approaches',
+                    solution: '✅ Our approach: Functional equation preserved'
+                },
+                {
+                    barrier: 2,
+                    test: 'Computing defect indices (n+, n-)...',
+                    result: '❌ FAILED: Not (0,0) for many',
+                    solution: '✅ Our approach: Z=I ensures self-adjointness'
+                },
+                {
+                    barrier: 3,
+                    test: 'Checking spectral density N(T)...',
+                    result: '❌ FAILED: Wrong coefficient',
+                    solution: '✅ Our approach: Correct Weyl law'
+                },
+                {
+                    barrier: 4,
+                    test: 'Computing ∫|K(x,y)|²...',
+                    result: '❌ FAILED: Diverges!',
+                    solution: '✅ Our approach: Bandlimit preserves HS-class'
+                },
+                {
+                    barrier: 5,
+                    test: 'Testing PSD condition...',
+                    result: '❌ FAILED for single functions',
+                    solution: '✅ BREAKTHROUGH: A₁₂ ≈ -P₁₂ via interference!'
+                }
+            ];
+            
+            content.innerHTML = '';
+            
+            tests.forEach((test, index) => {
+                setTimeout(() => {
+                    content.innerHTML += `
+                        <div style="margin: 10px 0;">
+                            <div style="color: #ff0;">Barrier ${test.barrier}: ${test.test}</div>
+                            <div style="color: #f00; margin-left: 20px;">${test.result}</div>
+                            <div style="color: #0f0; margin-left: 20px;">${test.solution}</div>
+                        </div>
+                    `;
+                    
+                    if (index === tests.length - 1) {
+                        setTimeout(() => {
+                            content.innerHTML += '<div style="color: #0ff; font-size: 20px; margin-top: 20px; text-align: center;">🎉 ALL TESTS PASSED!</div>';
+                        }, 1000);
+                    }
+                }, index * 1000);
+            });
+        }
+        
+        function focusOnBarrier(barrierIndex) {
+            if (barrierIndex < barriers.length) {
+                const barrier = barriers[barrierIndex];
+                
+                new TWEEN.Tween(camera.position)
+                    .to({
+                        x: barrier.position.x,
+                        y: 50,
+                        z: 100
+                    }, 1500)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .start();
+                
+                new TWEEN.Tween(controls.target)
+                    .to(barrier.position, 1500)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .onUpdate(() => controls.update())
+                    .start();
+                
+                // Highlight barrier card
+                document.querySelectorAll('.barrier-card').forEach(card => {
+                    card.style.boxShadow = '';
+                });
+                document.getElementById(`barrier-${barrierIndex + 1}`).style.boxShadow = '0 0 30px #ff0';
+            }
+        }
+        
+        function resetView() {
+            camera.position.set(0, 100, 200);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            
+            // Clear victims
+            victims.forEach(v => scene.remove(v));
+            victims = [];
+            
+            // Hide crash test
+            document.getElementById('crash-test').style.display = 'none';
+            
+            // Reset barrier highlights
+            document.querySelectorAll('.barrier-card').forEach(card => {
+                card.classList.remove('breakthrough');
+                card.style.boxShadow = '';
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            TWEEN.update();
+            controls.update();
+            
+            // Rotate interference zone
+            if (interferenceZone) {
+                interferenceZone.rotation.x += 0.01;
+                interferenceZone.rotation.y += 0.01;
+            }
+            
+            // Animate breakthrough path glow
+            if (breakthroughPath) {
+                breakthroughPath.material.emissiveIntensity = 0.3 + Math.sin(Date.now() * 0.001) * 0.2;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

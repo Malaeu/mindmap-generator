@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Infinity - Interactive Knowledge Network</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        
+        #info h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #00bbff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        #info p {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        #search {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        #search input {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            width: 300px;
+            font-size: 16px;
+        }
+        
+        #search input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="info">
+        <h1>🧠 Mathematical Infinity Network</h1>
+        <p>Interactive 3D visualization of mathematical concepts from the conversation about infinity, Riemann Hypothesis, and their deep connections.</p>
+        <p style="margin-top: 10px; font-size: 12px;">
+            🖱️ <strong>Rotate:</strong> Left click + drag<br>
+            🔍 <strong>Zoom:</strong> Scroll wheel<br>
+            👆 <strong>Select:</strong> Click on nodes<br>
+            ⌨️ <strong>Search:</strong> Type concept name
+        </p>
+    </div>
+    
+    <div id="stats">
+        <div class="stat-item">
+            <span>Topics:</span>
+            <span class="stat-value" id="topic-count">10</span>
+        </div>
+        <div class="stat-item">
+            <span>Concepts:</span>
+            <span class="stat-value" id="concept-count">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Connections:</span>
+            <span class="stat-value" id="connection-count">0</span>
+        </div>
+        <div class="stat-item">
+            <span>Active:</span>
+            <span class="stat-value" id="active-node">-</span>
+        </div>
+    </div>
+    
+    <div id="search">
+        <input type="text" placeholder="🔍 Search concepts..." id="search-input">
+    </div>
+    
+    <div class="controls">
+        <button onclick="toggleRotation()">🔄 Auto-Rotate</button>
+        <button onclick="resetView()">🏠 Reset View</button>
+        <button onclick="togglePhysics()">⚡ Physics</button>
+        <button onclick="changeLayout()">📐 Layout</button>
+        <button onclick="exportData()">💾 Export</button>
+    </div>
+    
+    <div id="tooltip"></div>
+    
+    <script>
+        // Data structure for the knowledge graph
+        const graphData = {
+            nodes: [
+                // Main topics
+                {id: 'root', label: 'Mathematical Infinity\n& Riemann Hypothesis', group: 'root', size: 20, color: '#ff6b6b'},
+                {id: 't1', label: 'Mathematical Infinity', group: 'topic', size: 15, color: '#4ecdc4'},
+                {id: 't2', label: 'Countable Infinity', group: 'topic', size: 15, color: '#45b7d1'},
+                {id: 't3', label: 'Implementation', group: 'topic', size: 15, color: '#96ceb4'},
+                {id: 't4', label: 'Riemann Hypothesis', group: 'topic', size: 15, color: '#ffeaa7'},
+                {id: 't5', label: 'Zeta Function Theory', group: 'topic', size: 15, color: '#dfe6e9'},
+                {id: 't6', label: 'Adelic Theory', group: 'topic', size: 15, color: '#fab1a0'},
+                {id: 't7', label: 'Spectral Theory', group: 'topic', size: 15, color: '#a29bfe'},
+                {id: 't8', label: 'Langlands Program', group: 'topic', size: 15, color: '#fd79a8'},
+                {id: 't9', label: 'VME Architecture', group: 'topic', size: 15, color: '#fdcb6e'},
+                {id: 't10', label: 'Analytic Bridges', group: 'topic', size: 15, color: '#6c5ce7'},
+                
+                // Key concepts
+                {id: 'c1', label: 'Operators', group: 'concept', size: 10, color: '#74b9ff', count: 48},
+                {id: 'c2', label: 'Self-Adjoint', group: 'concept', size: 10, color: '#a29bfe', count: 26},
+                {id: 'c3', label: 'Explicit Formula', group: 'concept', size: 10, color: '#ffeaa7', count: 20},
+                {id: 'c4', label: 'Weyl Formula', group: 'concept', size: 10, color: '#55a3ff', count: 26},
+                {id: 'c5', label: 'Hilbert', group: 'concept', size: 10, color: '#fd79a8', count: 18},
+                {id: 'c6', label: 'Critical Line', group: 'concept', size: 10, color: '#fdcb6e', count: 17},
+                {id: 'c7', label: 'Euler Product', group: 'concept', size: 10, color: '#00b894', count: 15},
+                {id: 'c8', label: 'Random Matrix Theory', group: 'concept', size: 10, color: '#e17055', count: 18},
+                {id: 'c9', label: 'Functional Equation', group: 'concept', size: 10, color: '#0984e3', count: 15},
+                {id: 'c10', label: 'Spectral Theory', group: 'concept', size: 10, color: '#6c5ce7', count: 19},
+                {id: 'c11', label: 'Adeles', group: 'concept', size: 10, color: '#fab1a0', count: 11},
+                {id: 'c12', label: 'Fourier Analysis', group: 'concept', size: 10, color: '#00cec9', count: 17},
+                {id: 'c13', label: 'Zeta Function', group: 'concept', size: 10, color: '#ff7675', count: 8},
+                {id: 'c14', label: 'Aleph-null', group: 'concept', size: 10, color: '#74b9ff', count: 2},
+                {id: 'c15', label: 'Continuum', group: 'concept', size: 10, color: '#a29bfe', count: 3},
+                {id: 'c16', label: 'Bijection', group: 'concept', size: 10, color: '#ffeaa7', count: 1},
+                {id: 'c17', label: 'Cantor', group: 'concept', size: 10, color: '#55a3ff', count: 2},
+                {id: 'c18', label: 'Diagonal Argument', group: 'concept', size: 10, color: '#fd79a8', count: 1},
+                {id: 'c19', label: 'p-adic Numbers', group: 'concept', size: 10, color: '#fdcb6e', count: 4},
+                {id: 'c20', label: 'Langlands Program', group: 'concept', size: 10, color: '#00b894', count: 4},
+                {id: 'c21', label: 'Theta Function', group: 'concept', size: 10, color: '#e17055', count: 4},
+                {id: 'c22', label: 'Poisson Summation', group: 'concept', size: 10, color: '#0984e3', count: 3},
+                {id: 'c23', label: 'Mellin Transform', group: 'concept', size: 10, color: '#6c5ce7', count: 5},
+                {id: 'c24', label: 'Python Implementation', group: 'concept', size: 10, color: '#fab1a0', count: 73},
+                {id: 'c25', label: 'Prime Numbers', group: 'concept', size: 10, color: '#00cec9', count: 4},
+                {id: 'c26', label: 'Ordinals', group: 'concept', size: 10, color: '#ff7675', count: 2},
+                {id: 'c27', label: 'Cardinality', group: 'concept', size: 10, color: '#74b9ff', count: 2},
+                {id: 'c28', label: 'Analytic Continuation', group: 'concept', size: 10, color: '#a29bfe', count: 6},
+                {id: 'c29', label: 'Holomorphic', group: 'concept', size: 10, color: '#ffeaa7', count: 3},
+                {id: 'c30', label: 'Automorphic Forms', group: 'concept', size: 10, color: '#55a3ff', count: 2},
+                {id: 'c31', label: 'Galois Representations', group: 'concept', size: 10, color: '#fd79a8', count: 2},
+                {id: 'c32', label: 'Uncountable Infinity', group: 'concept', size: 10, color: '#fdcb6e', count: 2},
+                {id: 'c33', label: 'Zeta Zeros', group: 'concept', size: 10, color: '#00b894', count: 2}
+            ],
+            links: [
+                // Root to main topics
+                {source: 'root', target: 't1', weight: 3},
+                {source: 'root', target: 't2', weight: 3},
+                {source: 'root', target: 't3', weight: 3},
+                {source: 'root', target: 't4', weight: 3},
+                {source: 'root', target: 't5', weight: 3},
+                {source: 'root', target: 't6', weight: 3},
+                {source: 'root', target: 't7', weight: 3},
+                {source: 'root', target: 't8', weight: 3},
+                {source: 'root', target: 't9', weight: 3},
+                {source: 'root', target: 't10', weight: 3},
+                
+                // Topic interconnections
+                {source: 't4', target: 't5', weight: 2},
+                {source: 't7', target: 't4', weight: 2},
+                {source: 't6', target: 't5', weight: 2},
+                {source: 't1', target: 't2', weight: 2},
+                {source: 't10', target: 't5', weight: 2},
+                {source: 't9', target: 't3', weight: 2},
+                
+                // Topics to concepts (sampling key connections)
+                {source: 't1', target: 'c1', weight: 1},
+                {source: 't1', target: 'c3', weight: 1},
+                {source: 't1', target: 'c5', weight: 1},
+                {source: 't2', target: 'c14', weight: 1},
+                {source: 't2', target: 'c16', weight: 1},
+                {source: 't2', target: 'c17', weight: 1},
+                {source: 't2', target: 'c18', weight: 1},
+                {source: 't2', target: 'c27', weight: 1},
+                {source: 't2', target: 'c32', weight: 1},
+                {source: 't3', target: 'c24', weight: 1},
+                {source: 't4', target: 'c1', weight: 1},
+                {source: 't4', target: 'c2', weight: 1},
+                {source: 't4', target: 'c3', weight: 1},
+                {source: 't4', target: 'c5', weight: 1},
+                {source: 't4', target: 'c13', weight: 1},
+                {source: 't5', target: 'c1', weight: 1},
+                {source: 't5', target: 'c3', weight: 1},
+                {source: 't5', target: 'c4', weight: 1},
+                {source: 't5', target: 'c6', weight: 1},
+                {source: 't5', target: 'c7', weight: 1},
+                {source: 't5', target: 'c13', weight: 1},
+                {source: 't5', target: 'c25', weight: 1},
+                {source: 't5', target: 'c33', weight: 1},
+                {source: 't6', target: 'c11', weight: 1},
+                {source: 't6', target: 'c19', weight: 1},
+                {source: 't7', target: 'c1', weight: 1},
+                {source: 't7', target: 'c2', weight: 1},
+                {source: 't7', target: 'c10', weight: 1},
+                {source: 't8', target: 'c20', weight: 1},
+                {source: 't8', target: 'c30', weight: 1},
+                {source: 't8', target: 'c31', weight: 1},
+                {source: 't10', target: 'c21', weight: 1},
+                {source: 't10', target: 'c22', weight: 1},
+                {source: 't10', target: 'c23', weight: 1},
+                {source: 't10', target: 'c28', weight: 1},
+                
+                // Concept interconnections
+                {source: 'c1', target: 'c2', weight: 1},
+                {source: 'c3', target: 'c4', weight: 1},
+                {source: 'c5', target: 'c10', weight: 1},
+                {source: 'c6', target: 'c13', weight: 1},
+                {source: 'c7', target: 'c25', weight: 1},
+                {source: 'c8', target: 'c10', weight: 1},
+                {source: 'c11', target: 'c19', weight: 1},
+                {source: 'c12', target: 'c21', weight: 1},
+                {source: 'c14', target: 'c15', weight: 1},
+                {source: 'c16', target: 'c17', weight: 1},
+                {source: 'c18', target: 'c17', weight: 1},
+                {source: 'c20', target: 'c30', weight: 1},
+                {source: 'c21', target: 'c22', weight: 1},
+                {source: 'c28', target: 'c29', weight: 1}
+            ]
+        };
+        
+        // Three.js setup
+        let scene, camera, renderer, controls;
+        let nodes = [], links = [];
+        let raycaster, mouse;
+        let selectedNode = null;
+        let autoRotate = false;
+        let physicsEnabled = true;
+        let currentLayout = 'force';
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x000000, 100, 1000);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 100;
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.5;
+            controls.zoomSpeed = 0.8;
+            
+            // Raycaster for mouse interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight.position.set(50, 50, 50);
+            scene.add(directionalLight);
+            
+            // Create graph
+            createGraph();
+            
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('click', onMouseClick);
+            document.getElementById('search-input').addEventListener('input', onSearch);
+            
+            // Update stats
+            updateStats();
+            
+            // Start animation
+            animate();
+        }
+        
+        function createGraph() {
+            const nodeMap = {};
+            
+            // Create nodes
+            graphData.nodes.forEach(nodeData => {
+                const geometry = new THREE.SphereGeometry(nodeData.size / 3, 32, 32);
+                const material = new THREE.MeshPhongMaterial({
+                    color: nodeData.color,
+                    emissive: nodeData.color,
+                    emissiveIntensity: 0.3,
+                    shininess: 100
+                });
+                
+                const node = new THREE.Mesh(geometry, material);
+                
+                // Random initial position for force layout
+                node.position.x = (Math.random() - 0.5) * 100;
+                node.position.y = (Math.random() - 0.5) * 100;
+                node.position.z = (Math.random() - 0.5) * 100;
+                
+                node.userData = nodeData;
+                scene.add(node);
+                nodes.push(node);
+                nodeMap[nodeData.id] = node;
+                
+                // Add label (using sprite)
+                if (nodeData.group === 'topic' || nodeData.group === 'root') {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 256;
+                    canvas.height = 64;
+                    
+                    context.font = '24px Arial';
+                    context.fillStyle = 'white';
+                    context.textAlign = 'center';
+                    context.fillText(nodeData.label.split('\\n')[0], 128, 40);
+                    
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const spriteMaterial = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true
+                    });
+                    
+                    const sprite = new THREE.Sprite(spriteMaterial);
+                    sprite.scale.set(20, 5, 1);
+                    sprite.position.copy(node.position);
+                    sprite.position.y += nodeData.size / 2 + 3;
+                    node.label = sprite;
+                    scene.add(sprite);
+                }
+            });
+            
+            // Create links
+            graphData.links.forEach(linkData => {
+                const sourceNode = nodeMap[linkData.source];
+                const targetNode = nodeMap[linkData.target];
+                
+                if (sourceNode && targetNode) {
+                    const geometry = new THREE.BufferGeometry();
+                    const positions = new Float32Array(6);
+                    
+                    positions[0] = sourceNode.position.x;
+                    positions[1] = sourceNode.position.y;
+                    positions[2] = sourceNode.position.z;
+                    positions[3] = targetNode.position.x;
+                    positions[4] = targetNode.position.y;
+                    positions[5] = targetNode.position.z;
+                    
+                    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    
+                    const material = new THREE.LineBasicMaterial({
+                        color: 0x555555,
+                        opacity: 0.3 * linkData.weight,
+                        transparent: true,
+                        linewidth: linkData.weight
+                    });
+                    
+                    const link = new THREE.Line(geometry, material);
+                    link.userData = {
+                        source: sourceNode,
+                        target: targetNode,
+                        weight: linkData.weight
+                    };
+                    
+                    scene.add(link);
+                    links.push(link);
+                }
+            });
+        }
+        
+        function applyForceLayout() {
+            if (!physicsEnabled) return;
+            
+            const k = 50; // Spring constant
+            const damping = 0.95;
+            
+            // Apply forces
+            nodes.forEach(node => {
+                if (!node.userData.velocity) {
+                    node.userData.velocity = new THREE.Vector3(0, 0, 0);
+                }
+                
+                // Repulsion between all nodes
+                nodes.forEach(otherNode => {
+                    if (node !== otherNode) {
+                        const diff = node.position.clone().sub(otherNode.position);
+                        const distance = diff.length();
+                        
+                        if (distance > 0 && distance < 100) {
+                            const force = diff.normalize().multiplyScalar(k / (distance * distance));
+                            node.userData.velocity.add(force);
+                        }
+                    }
+                });
+            });
+            
+            // Apply link constraints
+            links.forEach(link => {
+                const source = link.userData.source;
+                const target = link.userData.target;
+                const diff = target.position.clone().sub(source.position);
+                const distance = diff.length();
+                const idealDistance = 30;
+                
+                if (distance > 0) {
+                    const force = diff.normalize().multiplyScalar((distance - idealDistance) * 0.01 * link.userData.weight);
+                    
+                    if (source.userData.velocity && target.userData.velocity) {
+                        source.userData.velocity.add(force);
+                        target.userData.velocity.sub(force);
+                    }
+                }
+            });
+            
+            // Update positions
+            nodes.forEach(node => {
+                if (node.userData.velocity && node.userData.id !== 'root') {
+                    node.userData.velocity.multiplyScalar(damping);
+                    node.position.add(node.userData.velocity);
+                    
+                    // Keep nodes within bounds
+                    const bound = 150;
+                    node.position.clamp(
+                        new THREE.Vector3(-bound, -bound, -bound),
+                        new THREE.Vector3(bound, bound, bound)
+                    );
+                    
+                    // Update label position
+                    if (node.label) {
+                        node.label.position.copy(node.position);
+                        node.label.position.y += node.userData.size / 2 + 3;
+                    }
+                }
+            });
+            
+            // Update link positions
+            links.forEach(link => {
+                const positions = link.geometry.attributes.position.array;
+                positions[0] = link.userData.source.position.x;
+                positions[1] = link.userData.source.position.y;
+                positions[2] = link.userData.source.position.z;
+                positions[3] = link.userData.target.position.x;
+                positions[4] = link.userData.target.position.y;
+                positions[5] = link.userData.target.position.z;
+                link.geometry.attributes.position.needsUpdate = true;
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Apply physics
+            if (physicsEnabled) {
+                applyForceLayout();
+            }
+            
+            // Auto-rotation
+            if (autoRotate) {
+                scene.rotation.y += 0.002;
+            }
+            
+            // Update controls
+            controls.update();
+            
+            // Update tweens
+            TWEEN.update();
+            
+            // Render
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            const tooltip = document.getElementById('tooltip');
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                const nodeData = node.userData;
+                
+                tooltip.innerHTML = `
+                    <strong>${nodeData.label}</strong><br>
+                    Type: ${nodeData.group}<br>
+                    ${nodeData.count ? `Mentions: ${nodeData.count}` : ''}
+                `;
+                
+                tooltip.style.display = 'block';
+                tooltip.style.left = event.clientX + 10 + 'px';
+                tooltip.style.top = event.clientY + 10 + 'px';
+                
+                document.body.style.cursor = 'pointer';
+            } else {
+                tooltip.style.display = 'none';
+                document.body.style.cursor = 'default';
+            }
+        }
+        
+        function onMouseClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                selectNode(intersects[0].object);
+            }
+        }
+        
+        function selectNode(node) {
+            // Reset previous selection
+            if (selectedNode) {
+                selectedNode.material.emissiveIntensity = 0.3;
+            }
+            
+            selectedNode = node;
+            selectedNode.material.emissiveIntensity = 0.8;
+            
+            // Update active node display
+            document.getElementById('active-node').textContent = node.userData.label;
+            
+            // Animate camera to focus on node
+            const targetPosition = node.position.clone();
+            targetPosition.z += 50;
+            
+            new TWEEN.Tween(camera.position)
+                .to(targetPosition, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to(node.position, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .onUpdate(() => controls.update())
+                .start();
+        }
+        
+        function onSearch(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            
+            nodes.forEach(node => {
+                if (node.userData.label.toLowerCase().includes(searchTerm)) {
+                    node.material.emissiveIntensity = 0.8;
+                    node.material.opacity = 1;
+                } else {
+                    node.material.emissiveIntensity = 0.1;
+                    node.material.opacity = searchTerm ? 0.3 : 1;
+                }
+                node.material.transparent = searchTerm !== '';
+            });
+        }
+        
+        function toggleRotation() {
+            autoRotate = !autoRotate;
+        }
+        
+        function resetView() {
+            camera.position.set(0, 0, 100);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+        
+        function togglePhysics() {
+            physicsEnabled = !physicsEnabled;
+        }
+        
+        function changeLayout() {
+            // Cycle through layouts
+            const layouts = ['force', 'sphere', 'grid', 'spiral'];
+            const currentIndex = layouts.indexOf(currentLayout);
+            currentLayout = layouts[(currentIndex + 1) % layouts.length];
+            
+            switch(currentLayout) {
+                case 'sphere':
+                    arrangeInSphere();
+                    break;
+                case 'grid':
+                    arrangeInGrid();
+                    break;
+                case 'spiral':
+                    arrangeInSpiral();
+                    break;
+                default:
+                    // Return to force layout
+                    physicsEnabled = true;
+            }
+        }
+        
+        function arrangeInSphere() {
+            physicsEnabled = false;
+            const radius = 80;
+            
+            nodes.forEach((node, i) => {
+                const phi = Math.acos(1 - 2 * i / nodes.length);
+                const theta = Math.sqrt(nodes.length * Math.PI) * phi;
+                
+                new TWEEN.Tween(node.position)
+                    .to({
+                        x: radius * Math.cos(theta) * Math.sin(phi),
+                        y: radius * Math.sin(theta) * Math.sin(phi),
+                        z: radius * Math.cos(phi)
+                    }, 1000)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                
+                if (node.label) {
+                    node.label.position.copy(node.position);
+                    node.label.position.y += node.userData.size / 2 + 3;
+                }
+            });
+        }
+        
+        function arrangeInGrid() {
+            physicsEnabled = false;
+            const gridSize = Math.ceil(Math.sqrt(nodes.length));
+            const spacing = 20;
+            
+            nodes.forEach((node, i) => {
+                const x = (i % gridSize - gridSize / 2) * spacing;
+                const y = (Math.floor(i / gridSize) - gridSize / 2) * spacing;
+                const z = 0;
+                
+                new TWEEN.Tween(node.position)
+                    .to({ x, y, z }, 1000)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                
+                if (node.label) {
+                    node.label.position.copy(node.position);
+                    node.label.position.y += node.userData.size / 2 + 3;
+                }
+            });
+        }
+        
+        function arrangeInSpiral() {
+            physicsEnabled = false;
+            const a = 5;
+            const b = 5;
+            
+            nodes.forEach((node, i) => {
+                const t = i * 0.5;
+                const x = (a + b * t) * Math.cos(t);
+                const y = (a + b * t) * Math.sin(t);
+                const z = i * 2;
+                
+                new TWEEN.Tween(node.position)
+                    .to({ x, y, z }, 1000)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                
+                if (node.label) {
+                    node.label.position.copy(node.position);
+                    node.label.position.y += node.userData.size / 2 + 3;
+                }
+            });
+        }
+        
+        function updateStats() {
+            document.getElementById('concept-count').textContent = nodes.length;
+            document.getElementById('connection-count').textContent = links.length;
+        }
+        
+        function exportData() {
+            const data = {
+                nodes: graphData.nodes,
+                links: graphData.links,
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'infinity_network.json';
+            a.click();
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

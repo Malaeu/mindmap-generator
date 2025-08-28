@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNERGY PATH: From Infinity to PSD Breakthrough</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #synergy-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 400px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+        
+        #synergy-panel h1 {
+            color: #0ff;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #0ff;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .path-stage {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 3px solid #0f0;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .path-stage.active {
+            background: rgba(0, 255, 255, 0.1);
+            border-left-color: #0ff;
+            animation: glow 1s infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+        }
+        
+        .concept-link {
+            color: #ff0;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .concept-link:hover {
+            color: #f0f;
+            text-shadow: 0 0 5px #f0f;
+        }
+        
+        .math-formula {
+            background: rgba(255, 255, 0, 0.1);
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        #stage-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .synergy-line {
+            stroke: #0ff;
+            stroke-width: 3;
+            fill: none;
+            filter: drop-shadow(0 0 10px #0ff);
+        }
+        
+        #equation-display {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ff0;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            color: #fff;
+            max-width: 600px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="synergy-panel">
+        <h1>🔥 SYNERGY PATH VISUALIZATION</h1>
+        
+        <div class="path-stage" id="stage-1">
+            <h3>Stage 1: INFINITY FOUNDATIONS</h3>
+            <p>От <span class="concept-link" data-concept="bijection">биекций</span> и <span class="concept-link" data-concept="aleph">ℵ₀</span> к <span class="concept-link" data-concept="diagonal">диагональному аргументу</span></p>
+            <div class="math-formula">ℕ ↔ ℤ ↔ ℚ (countable)</div>
+            <div class="math-formula">ℝ = 2^ℵ₀ (uncountable)</div>
+        </div>
+        
+        <div class="path-stage" id="stage-2">
+            <h3>Stage 2: RIEMANN → SPECTRAL</h3>
+            <p>От <span class="concept-link" data-concept="zeta">ζ(s)</span> через <span class="concept-link" data-concept="euler-product">произведение Эйлера</span> к <span class="concept-link" data-concept="operators">операторам</span></p>
+            <div class="math-formula">ζ(s) = Σ(1/n^s) = Π(1/(1-p^-s))</div>
+            <div class="math-formula">Hypothesis: Re(ρ) = 1/2</div>
+        </div>
+        
+        <div class="path-stage" id="stage-3">
+            <h3>Stage 3: HILBERT-PÓLYA CONNECTION</h3>
+            <p><span class="concept-link" data-concept="self-adjoint">Самосопряжённый оператор</span> H с спектром = {Im(ρ)}</p>
+            <div class="math-formula">H = H* ⟹ spectrum ⊂ ℝ</div>
+            <div class="math-formula">det₂(I + zK) ≈ ξ(1/2 + iz)</div>
+        </div>
+        
+        <div class="path-stage" id="stage-4">
+            <h3>Stage 4: EXPLICIT FORMULA BRIDGE</h3>
+            <p><span class="concept-link" data-concept="weyl">Формула Вейля</span> + <span class="concept-link" data-concept="test-functions">тест-функции</span></p>
+            <div class="math-formula">Σ_ρ F̂(ρ) = A[F] + P[F]</div>
+            <div class="math-formula">A: archimidean, P: prime</div>
+        </div>
+        
+        <div class="path-stage active" id="stage-5">
+            <h3>Stage 5: PSD BREAKTHROUGH!</h3>
+            <p>СИНЕРГИЯ: <span class="concept-link" data-concept="dpss">DPSS окна</span> + <span class="concept-link" data-concept="zero-calibration">Z-калибровка</span> + <span class="concept-link" data-concept="interference">интерференция</span></p>
+            <div class="math-formula">Z - A - P ≥ 0 (PSD condition)</div>
+            <div class="math-formula">A₁₂ ≈ -P₁₂ (interference!)</div>
+            <div class="math-formula">Z = I (zero calibration)</div>
+        </div>
+        
+        <div class="path-stage" id="stage-6">
+            <h3>KEY INSIGHT: OVERLAPPING WINDOWS</h3>
+            <p>Контролируемое перекрытие δ создаёт A₁₂ для гашения P₁₂!</p>
+            <div class="math-formula">disjoint: P₁₂ uncontrolled ❌</div>
+            <div class="math-formula">overlap: A₁₂ + P₁₂ ≈ 0 ✅</div>
+        </div>
+    </div>
+    
+    <div id="stage-indicator">
+        <h3>ACTIVE PATH</h3>
+        <div id="current-path" style="color: #0ff; font-size: 20px;">—</div>
+    </div>
+    
+    <div id="equation-display"></div>
+    
+    <div id="controls">
+        <button onclick="traceSynergyPath()">⚡ TRACE SYNERGY</button>
+        <button onclick="showInterference()">🌊 SHOW INTERFERENCE</button>
+        <button onclick="animateBreakthrough()">💥 BREAKTHROUGH</button>
+        <button onclick="resetVisualization()">🔄 RESET</button>
+    </div>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        let conceptNodes = {};
+        let synergyPaths = [];
+        let activeConnections = [];
+        let animationRunning = false;
+        
+        // Key concepts in the synergy path
+        const synergyChain = [
+            // Foundation
+            {id: 'infinity', label: 'Mathematical Infinity', stage: 1, color: 0x00ff00},
+            {id: 'bijection', label: 'Bijection', stage: 1, color: 0x00ff00},
+            {id: 'aleph', label: 'Aleph-null ℵ₀', stage: 1, color: 0x00ff00},
+            {id: 'diagonal', label: 'Diagonal Argument', stage: 1, color: 0x00ff00},
+            
+            // Riemann connection
+            {id: 'zeta', label: 'Zeta Function', stage: 2, color: 0x00ffff},
+            {id: 'euler-product', label: 'Euler Product', stage: 2, color: 0x00ffff},
+            {id: 'critical-line', label: 'Critical Line', stage: 2, color: 0x00ffff},
+            
+            // Operator theory
+            {id: 'operators', label: 'Operators', stage: 3, color: 0xffff00},
+            {id: 'self-adjoint', label: 'Self-Adjoint', stage: 3, color: 0xffff00},
+            {id: 'spectral', label: 'Spectral Theory', stage: 3, color: 0xffff00},
+            {id: 'hilbert-space', label: 'Hilbert Space', stage: 3, color: 0xffff00},
+            
+            // Explicit formula
+            {id: 'weyl', label: 'Weyl Formula', stage: 4, color: 0xff00ff},
+            {id: 'test-functions', label: 'Test Functions', stage: 4, color: 0xff00ff},
+            {id: 'archimidean', label: 'Archimidean Block', stage: 4, color: 0xff00ff},
+            {id: 'prime-block', label: 'Prime Block', stage: 4, color: 0xff00ff},
+            
+            // BREAKTHROUGH
+            {id: 'dpss', label: 'DPSS/Slepian Windows', stage: 5, color: 0xff0000},
+            {id: 'zero-calibration', label: 'Zero Calibration', stage: 5, color: 0xff0000},
+            {id: 'interference', label: 'INTERFERENCE', stage: 5, color: 0xff0000},
+            {id: 'psd', label: 'PSD CONDITION', stage: 5, color: 0xff0000},
+            
+            // VME Architecture connection
+            {id: 'vme', label: 'VME Architecture', stage: 6, color: 0xffffff},
+            {id: 'memory', label: 'MEMORY', stage: 6, color: 0xffffff},
+            {id: 'error', label: 'ERROR', stage: 6, color: 0xffffff},
+            {id: 'modulus', label: 'MODULUS', stage: 6, color: 0xffffff},
+            {id: 'spectral-phase', label: 'SPECTRAL PHASE', stage: 6, color: 0xffffff}
+        ];
+        
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x000000, 50, 300);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 50, 100);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const pointLight1 = new THREE.PointLight(0x00ff00, 1, 100);
+            pointLight1.position.set(50, 50, 50);
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0x00ffff, 1, 100);
+            pointLight2.position.set(-50, 50, -50);
+            scene.add(pointLight2);
+            
+            // Create synergy network
+            createSynergyNetwork();
+            
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.querySelectorAll('.concept-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const concept = e.target.dataset.concept;
+                    highlightConcept(concept);
+                });
+            });
+            
+            animate();
+        }
+        
+        function createSynergyNetwork() {
+            const radius = 50;
+            const stageAngles = {};
+            
+            // Calculate positions by stage
+            synergyChain.forEach((concept, index) => {
+                if (!stageAngles[concept.stage]) {
+                    stageAngles[concept.stage] = 0;
+                }
+                
+                const stageRadius = radius - concept.stage * 8;
+                const angle = (concept.stage * 60 + stageAngles[concept.stage] * 30) * Math.PI / 180;
+                const height = (concept.stage - 3.5) * 15;
+                
+                stageAngles[concept.stage]++;
+                
+                // Create node
+                const geometry = new THREE.SphereGeometry(2, 32, 32);
+                const material = new THREE.MeshPhongMaterial({
+                    color: concept.color,
+                    emissive: concept.color,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const node = new THREE.Mesh(geometry, material);
+                node.position.set(
+                    Math.cos(angle) * stageRadius,
+                    height,
+                    Math.sin(angle) * stageRadius
+                );
+                
+                node.userData = concept;
+                conceptNodes[concept.id] = node;
+                scene.add(node);
+                
+                // Create glowing aura
+                const auraGeometry = new THREE.SphereGeometry(3, 16, 16);
+                const auraMaterial = new THREE.MeshBasicMaterial({
+                    color: concept.color,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+                node.add(aura);
+                
+                // Add pulsing animation
+                node.userData.pulse = () => {
+                    new TWEEN.Tween(node.scale)
+                        .to({x: 1.5, y: 1.5, z: 1.5}, 500)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .chain(
+                            new TWEEN.Tween(node.scale)
+                                .to({x: 1, y: 1, z: 1}, 500)
+                                .easing(TWEEN.Easing.Quadratic.In)
+                        )
+                        .start();
+                };
+            });
+            
+            // Create initial connections
+            createConnections();
+        }
+        
+        function createConnections() {
+            // Stage connections
+            const connections = [
+                // Foundation to Riemann
+                ['infinity', 'zeta'],
+                ['aleph', 'euler-product'],
+                ['diagonal', 'critical-line'],
+                
+                // Riemann to Operators
+                ['zeta', 'operators'],
+                ['critical-line', 'self-adjoint'],
+                ['euler-product', 'spectral'],
+                
+                // Operators to Explicit Formula
+                ['operators', 'weyl'],
+                ['self-adjoint', 'test-functions'],
+                ['spectral', 'archimidean'],
+                ['hilbert-space', 'prime-block'],
+                
+                // Explicit Formula to BREAKTHROUGH
+                ['weyl', 'dpss'],
+                ['test-functions', 'zero-calibration'],
+                ['archimidean', 'interference'],
+                ['prime-block', 'psd'],
+                
+                // BREAKTHROUGH to VME
+                ['psd', 'vme'],
+                ['interference', 'memory'],
+                ['zero-calibration', 'error'],
+                ['dpss', 'modulus']
+            ];
+            
+            connections.forEach(([from, to]) => {
+                createConnection(from, to, 0x00ff00, 0.3);
+            });
+        }
+        
+        function createConnection(fromId, toId, color = 0x00ff00, opacity = 0.5) {
+            const from = conceptNodes[fromId];
+            const to = conceptNodes[toId];
+            
+            if (!from || !to) return;
+            
+            const points = [];
+            points.push(from.position);
+            
+            // Add curve point for more organic look
+            const midPoint = new THREE.Vector3(
+                (from.position.x + to.position.x) / 2,
+                (from.position.y + to.position.y) / 2 + 5,
+                (from.position.z + to.position.z) / 2
+            );
+            points.push(midPoint);
+            points.push(to.position);
+            
+            const curve = new THREE.CatmullRomCurve3(points);
+            const geometry = new THREE.TubeGeometry(curve, 20, 0.3, 8, false);
+            const material = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: opacity
+            });
+            
+            const connection = new THREE.Mesh(geometry, material);
+            connection.userData = {from: fromId, to: toId};
+            activeConnections.push(connection);
+            scene.add(connection);
+            
+            return connection;
+        }
+        
+        function traceSynergyPath() {
+            if (animationRunning) return;
+            animationRunning = true;
+            
+            // Clear previous highlights
+            clearHighlights();
+            
+            const stages = [
+                ['infinity', 'bijection', 'aleph', 'diagonal'],
+                ['zeta', 'euler-product', 'critical-line'],
+                ['operators', 'self-adjoint', 'spectral', 'hilbert-space'],
+                ['weyl', 'test-functions', 'archimidean', 'prime-block'],
+                ['dpss', 'zero-calibration', 'interference', 'psd'],
+                ['vme', 'memory', 'error', 'modulus', 'spectral-phase']
+            ];
+            
+            let stageIndex = 0;
+            
+            function animateStage() {
+                if (stageIndex >= stages.length) {
+                    animationRunning = false;
+                    showBreakthroughMessage();
+                    return;
+                }
+                
+                const stageNodes = stages[stageIndex];
+                document.querySelectorAll('.path-stage').forEach(el => el.classList.remove('active'));
+                document.getElementById(`stage-${stageIndex + 1}`).classList.add('active');
+                document.getElementById('current-path').textContent = `Stage ${stageIndex + 1}: ${getStageTitle(stageIndex + 1)}`;
+                
+                stageNodes.forEach((nodeId, i) => {
+                    setTimeout(() => {
+                        const node = conceptNodes[nodeId];
+                        if (node) {
+                            node.userData.pulse();
+                            node.material.emissiveIntensity = 1;
+                            
+                            // Create energy beam to next node
+                            if (i < stageNodes.length - 1) {
+                                createEnergyBeam(nodeId, stageNodes[i + 1]);
+                            }
+                        }
+                    }, i * 200);
+                });
+                
+                // Connect stages
+                if (stageIndex > 0 && stageIndex < stages.length) {
+                    const prevStage = stages[stageIndex - 1];
+                    const currStage = stages[stageIndex];
+                    
+                    setTimeout(() => {
+                        createConnection(
+                            prevStage[prevStage.length - 1],
+                            currStage[0],
+                            0x00ffff,
+                            0.8
+                        );
+                    }, stageNodes.length * 200);
+                }
+                
+                stageIndex++;
+                setTimeout(animateStage, stageNodes.length * 200 + 1000);
+            }
+            
+            animateStage();
+        }
+        
+        function createEnergyBeam(fromId, toId) {
+            const from = conceptNodes[fromId];
+            const to = conceptNodes[toId];
+            
+            if (!from || !to) return;
+            
+            const geometry = new THREE.CylinderGeometry(0.1, 0.5, 1, 8);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const beam = new THREE.Mesh(geometry, material);
+            beam.position.copy(from.position);
+            scene.add(beam);
+            
+            // Animate beam
+            new TWEEN.Tween(beam.position)
+                .to(to.position, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .onUpdate(() => {
+                    beam.lookAt(to.position);
+                })
+                .onComplete(() => {
+                    scene.remove(beam);
+                })
+                .start();
+            
+            new TWEEN.Tween(beam.scale)
+                .to({x: 2, y: 50, z: 2}, 1000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+        }
+        
+        function showInterference() {
+            // Highlight interference pattern
+            const a12Node = conceptNodes['archimidean'];
+            const p12Node = conceptNodes['prime-block'];
+            const interferenceNode = conceptNodes['interference'];
+            
+            if (a12Node && p12Node && interferenceNode) {
+                // Create wave patterns
+                createWavePattern(a12Node.position, 0x00ff00, 'A₁₂');
+                createWavePattern(p12Node.position, 0xff0000, 'P₁₂');
+                
+                // Show destructive interference at the interference node
+                setTimeout(() => {
+                    createInterferenceEffect(interferenceNode.position);
+                    
+                    document.getElementById('equation-display').style.display = 'block';
+                    document.getElementById('equation-display').innerHTML = `
+                        <h3>🌊 DESTRUCTIVE INTERFERENCE</h3>
+                        <div style="color: #0f0;">Archimidean: A₁₂ > 0 (controlled overlap)</div>
+                        <div style="color: #f00;">Prime: P₁₂ > 0 (uncontrolled cross)</div>
+                        <div style="color: #0ff;">Result: A₁₂ + P₁₂ ≈ 0 (cancellation!)</div>
+                        <div style="margin-top: 10px; color: #ff0;">⚡ THIS IS THE KEY INSIGHT!</div>
+                    `;
+                }, 1000);
+            }
+        }
+        
+        function createWavePattern(position, color, label) {
+            const geometry = new THREE.RingGeometry(1, 3, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            
+            for (let i = 0; i < 5; i++) {
+                const ring = new THREE.Mesh(geometry, material.clone());
+                ring.position.copy(position);
+                scene.add(ring);
+                
+                new TWEEN.Tween(ring.scale)
+                    .to({x: 10, y: 10, z: 10}, 2000)
+                    .delay(i * 200)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                
+                new TWEEN.Tween(ring.material)
+                    .to({opacity: 0}, 2000)
+                    .delay(i * 200)
+                    .onComplete(() => scene.remove(ring))
+                    .start();
+            }
+        }
+        
+        function createInterferenceEffect(position) {
+            const geometry = new THREE.SphereGeometry(5, 32, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0,
+                wireframe: true
+            });
+            
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.copy(position);
+            scene.add(sphere);
+            
+            new TWEEN.Tween(material)
+                .to({opacity: 1}, 500)
+                .chain(
+                    new TWEEN.Tween(material)
+                        .to({opacity: 0}, 1500)
+                )
+                .start();
+            
+            new TWEEN.Tween(sphere.rotation)
+                .to({x: Math.PI * 2, y: Math.PI * 2, z: Math.PI * 2}, 2000)
+                .start();
+            
+            new TWEEN.Tween(sphere.scale)
+                .to({x: 2, y: 2, z: 2}, 2000)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .onComplete(() => scene.remove(sphere))
+                .start();
+        }
+        
+        function animateBreakthrough() {
+            // Focus on PSD node
+            const psdNode = conceptNodes['psd'];
+            if (psdNode) {
+                // Camera animation
+                new TWEEN.Tween(camera.position)
+                    .to({
+                        x: psdNode.position.x + 20,
+                        y: psdNode.position.y + 20,
+                        z: psdNode.position.z + 20
+                    }, 2000)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .start();
+                
+                new TWEEN.Tween(controls.target)
+                    .to(psdNode.position, 2000)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .onUpdate(() => controls.update())
+                    .start();
+                
+                // Create explosion effect
+                setTimeout(() => {
+                    createExplosion(psdNode.position);
+                    
+                    document.getElementById('equation-display').style.display = 'block';
+                    document.getElementById('equation-display').innerHTML = `
+                        <h2 style="color: #ff0;">💥 PSD BREAKTHROUGH!</h2>
+                        <div style="font-size: 24px; margin: 10px 0;">
+                            Z - A - P ≥ 0
+                        </div>
+                        <div>Z = I (zero calibration)</div>
+                        <div>A₁₂ ≈ -P₁₂ (interference)</div>
+                        <div>d₁d₂ ≥ (A₁₂ + P₁₂)² ≈ 0</div>
+                        <div style="margin-top: 15px; color: #0ff;">
+                            ✅ POSITIVE SEMI-DEFINITE!
+                        </div>
+                    `;
+                }, 2000);
+            }
+        }
+        
+        function createExplosion(position) {
+            const particleCount = 100;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                const geometry = new THREE.SphereGeometry(0.5, 8, 8);
+                const material = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color().setHSL(Math.random(), 1, 0.5),
+                    transparent: true,
+                    opacity: 1
+                });
+                
+                const particle = new THREE.Mesh(geometry, material);
+                particle.position.copy(position);
+                
+                const velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                ).normalize().multiplyScalar(Math.random() * 30 + 10);
+                
+                particle.userData.velocity = velocity;
+                particles.push(particle);
+                scene.add(particle);
+            }
+            
+            // Animate particles
+            let frame = 0;
+            function animateParticles() {
+                frame++;
+                
+                particles.forEach(particle => {
+                    particle.position.add(particle.userData.velocity.clone().multiplyScalar(0.1));
+                    particle.material.opacity -= 0.02;
+                    
+                    if (particle.material.opacity <= 0) {
+                        scene.remove(particle);
+                    }
+                });
+                
+                if (frame < 100) {
+                    requestAnimationFrame(animateParticles);
+                }
+            }
+            
+            animateParticles();
+        }
+        
+        function highlightConcept(conceptId) {
+            const node = conceptNodes[conceptId];
+            if (node) {
+                node.userData.pulse();
+                
+                // Camera focus
+                new TWEEN.Tween(controls.target)
+                    .to(node.position, 1000)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .onUpdate(() => controls.update())
+                    .start();
+            }
+        }
+        
+        function clearHighlights() {
+            Object.values(conceptNodes).forEach(node => {
+                node.material.emissiveIntensity = 0.5;
+            });
+            
+            activeConnections.forEach(conn => {
+                scene.remove(conn);
+            });
+            activeConnections = [];
+            
+            document.getElementById('equation-display').style.display = 'none';
+        }
+        
+        function resetVisualization() {
+            clearHighlights();
+            createConnections();
+            
+            camera.position.set(0, 50, 100);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            
+            document.querySelectorAll('.path-stage').forEach(el => el.classList.remove('active'));
+            document.getElementById('current-path').textContent = '—';
+            animationRunning = false;
+        }
+        
+        function getStageTitle(stage) {
+            const titles = {
+                1: 'INFINITY FOUNDATIONS',
+                2: 'RIEMANN CONNECTION',
+                3: 'OPERATOR THEORY',
+                4: 'EXPLICIT FORMULA',
+                5: 'PSD BREAKTHROUGH',
+                6: 'VME ARCHITECTURE'
+            };
+            return titles[stage] || '';
+        }
+        
+        function showBreakthroughMessage() {
+            document.getElementById('equation-display').style.display = 'block';
+            document.getElementById('equation-display').innerHTML = `
+                <h2 style="color: #0f0;">🎯 SYNERGY COMPLETE!</h2>
+                <div>From Mathematical Infinity → Riemann Hypothesis → PSD Condition</div>
+                <div style="margin-top: 10px;">
+                    <span style="color: #0ff;">Key Innovation:</span> 
+                    Overlapping DPSS windows with zero calibration
+                </div>
+                <div style="color: #ff0;">A₁₂ + P₁₂ ≈ 0 through controlled interference!</div>
+            `;
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            TWEEN.update();
+            controls.update();
+            
+            // Rotate concept nodes
+            Object.values(conceptNodes).forEach(node => {
+                node.rotation.y += 0.01;
+                if (node.children[0]) {
+                    node.children[0].rotation.x += 0.02;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
