@@ -2,13 +2,12 @@
 
 import asyncio
 import hashlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from rich.console import Console
 
 from src.agents.base_agent import BaseAgent
 from src.core.types import ChunkMetadata, DocumentType, ExtractionResult
-
 
 console = Console()
 
@@ -76,7 +75,7 @@ class DocumentAnalyzer(BaseAgent):
         # Use first 2000 chars for type detection
         sample = content[:2000]
         
-        prompt = """Analyze this document excerpt and determine its primary type.
+        prompt = f"""Analyze this document excerpt and determine its primary type.
         
 Categories:
 1. TECHNICAL - Software documentation, API specs, technical guides
@@ -89,7 +88,7 @@ Categories:
 Document excerpt:
 {sample}
 
-Respond with ONLY the category name (e.g., "TECHNICAL").""".format(sample=sample)
+Respond with ONLY the category name (e.g., "TECHNICAL")."""
         
         cache_key = self._get_cache_key(sample, task="detect_type")
         
@@ -128,7 +127,7 @@ Respond with ONLY the category name (e.g., "TECHNICAL").""".format(sample=sample
         console.print(f"[green]✓ Detected document type: {doc_type.name}[/green]")
         return doc_type
     
-    def create_chunks(self, content: str) -> List[Dict]:
+    def create_chunks(self, content: str) -> list[dict]:
         """Create overlapping chunks from document.
         
         Args:

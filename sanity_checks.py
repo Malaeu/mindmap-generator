@@ -6,10 +6,11 @@ SANITY CHECK UNIT ТЕСТЫ
 """
 
 import numpy as np
-from fourier_conventions import compute_Q_weil, sieve_primes
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
+
+from fourier_conventions import compute_Q_weil, sieve_primes
 
 console = Console()
 

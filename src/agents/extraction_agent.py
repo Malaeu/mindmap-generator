@@ -2,14 +2,13 @@
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from rich.console import Console
 from fuzzywuzzy import fuzz
+from rich.console import Console
 
 from src.agents.base_agent import BaseAgent
 from src.core.types import Detail, ExtractionResult, Subtopic, Topic
-
 
 console = Console()
 
@@ -29,7 +28,7 @@ class TopicExtractor(BaseAgent):
         self.max_topics = 12
         self.similarity_threshold = 0.85
     
-    async def process(self, input_data: Dict, **kwargs) -> ExtractionResult:
+    async def process(self, input_data: dict, **kwargs) -> ExtractionResult:
         """Extract main topics from document.
         
         Args:
@@ -64,7 +63,7 @@ class TopicExtractor(BaseAgent):
                 error=str(e)
             )
     
-    async def _extract_topics(self, content: str, doc_type: str) -> List[Topic]:
+    async def _extract_topics(self, content: str, doc_type: str) -> list[Topic]:
         """Extract topics from content."""
         prompt = self._get_topic_prompt(content, doc_type)
         
@@ -90,7 +89,7 @@ class TopicExtractor(BaseAgent):
         console.print(f"[green]✓ Extracted {len(topics)} topics[/green]")
         return topics
     
-    def _deduplicate_topics(self, topics: List[Topic]) -> List[Topic]:
+    def _deduplicate_topics(self, topics: list[Topic]) -> list[Topic]:
         """Remove duplicate or highly similar topics."""
         unique = []
         
@@ -166,7 +165,7 @@ class SubtopicExtractor(BaseAgent):
         self.min_subtopics = 2
         self.max_subtopics = 6
     
-    async def process(self, input_data: Dict, **kwargs) -> ExtractionResult:
+    async def process(self, input_data: dict, **kwargs) -> ExtractionResult:
         """Extract subtopics for a topic.
         
         Args:
@@ -197,7 +196,7 @@ class SubtopicExtractor(BaseAgent):
                 error=str(e)
             )
     
-    async def _extract_subtopics(self, topic: str, content: str) -> List[Subtopic]:
+    async def _extract_subtopics(self, topic: str, content: str) -> list[Subtopic]:
         """Extract subtopics for a given topic."""
         prompt = f"""For the topic "{topic}", identify {self.min_subtopics}-{self.max_subtopics} specific subtopics.
 
@@ -269,7 +268,7 @@ class DetailExtractor(BaseAgent):
         self.min_details = 2
         self.max_details = 5
     
-    async def process(self, input_data: Dict, **kwargs) -> ExtractionResult:
+    async def process(self, input_data: dict, **kwargs) -> ExtractionResult:
         """Extract details for a subtopic.
         
         Args:
@@ -300,7 +299,7 @@ class DetailExtractor(BaseAgent):
                 error=str(e)
             )
     
-    async def _extract_details(self, subtopic: str, content: str) -> List[Detail]:
+    async def _extract_details(self, subtopic: str, content: str) -> list[Detail]:
         """Extract specific details for a subtopic."""
         prompt = f"""For the subtopic "{subtopic}", extract {self.min_details}-{self.max_details} specific details.
 

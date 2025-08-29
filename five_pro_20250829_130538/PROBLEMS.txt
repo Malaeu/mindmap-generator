@@ -1,0 +1,6 @@
+# Five-Pro Run Problems
+Started: 20250829_130538
+[PROBLEM] family=gaussian exited with code 1. See five_pro_20250829_130538/logs/gaussian.log
+[PROBLEM] family=cauchy exited with code 1. See five_pro_20250829_130538/logs/cauchy.log
+[PROBLEM] family=bump exited with code 1. See five_pro_20250829_130538/logs/bump.log
+[PROBLEM] family=autocorr exited with code 1. See five_pro_20250829_130538/logs/autocorr.log

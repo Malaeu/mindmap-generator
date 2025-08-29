@@ -6,14 +6,11 @@
 """
 
 import numpy as np
-from fourier_conventions import (
-    GaussianPair, GaussianHermitePair, compute_Q_weil, 
-    ZeroSumConvention, sieve_primes
-)
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
-import matplotlib.pyplot as plt
+
+from fourier_conventions import GaussianHermitePair, GaussianPair, compute_Q_weil, sieve_primes
 
 console = Console()
 
@@ -132,7 +129,7 @@ def tail_bounds_analysis(basis, labels, zeros=None):
     if zeros is None:
         zeros = ZEROS
     
-    console.print(f"\n[yellow]Анализ хвостовых ошибок:[/yellow]")
+    console.print("\n[yellow]Анализ хвостовых ошибок:[/yellow]")
     
     # Z-tail: оценка для γ > γ_max
     gamma_max = max(zeros)
@@ -144,7 +141,7 @@ def tail_bounds_analysis(basis, labels, zeros=None):
     table.add_column("P-tail", justify="right") 
     table.add_column("Relative Error", justify="right")
     
-    for func, label in zip(basis, labels):
+    for func, label in zip(basis, labels, strict=False):
         # Грубая оценка Z-tail через гауссиан
         from scipy.integrate import quad
         def z_tail_integrand(t):
@@ -174,7 +171,7 @@ def tail_bounds_analysis(basis, labels, zeros=None):
 
 def robustness_test(basis, labels, scale_factors=[1, 2, 4]):
     """Тест устойчивости при увеличении числа нулей"""
-    console.print(f"\n[yellow]Тест устойчивости PSD:[/yellow]")
+    console.print("\n[yellow]Тест устойчивости PSD:[/yellow]")
     
     results = {}
     
@@ -201,9 +198,9 @@ def robustness_test(basis, labels, scale_factors=[1, 2, 4]):
     is_stable = all(eig >= -1e-8 for eig in min_eigs)
     
     if is_stable:
-        console.print(f"\n[bold green]✅ PSD стабильно при масштабировании![/bold green]")
+        console.print("\n[bold green]✅ PSD стабильно при масштабировании![/bold green]")
     else:
-        console.print(f"\n[bold red]❌ PSD нестабильно при масштабировании![/bold red]")
+        console.print("\n[bold red]❌ PSD нестабильно при масштабировании![/bold red]")
     
     return is_stable, results
 
@@ -222,19 +219,19 @@ def main_benchmark():
         console.print(f"  - {label}")
     
     # 1. Gram-матрица
-    console.print(f"\n[bold yellow]1. ПОСТРОЕНИЕ GRAM-МАТРИЦЫ[/bold yellow]")
+    console.print("\n[bold yellow]1. ПОСТРОЕНИЕ GRAM-МАТРИЦЫ[/bold yellow]")
     G = compute_gram_matrix(basis, labels, ZEROS)
     
     # 2. PSD анализ
-    console.print(f"\n[bold yellow]2. PSD-АНАЛИЗ[/bold yellow]")
+    console.print("\n[bold yellow]2. PSD-АНАЛИЗ[/bold yellow]")
     is_psd, min_eig, eigenvalues = analyze_psd(G, labels)
     
     # 3. Хвостовые ошибки
-    console.print(f"\n[bold yellow]3. ХВОСТОВЫЕ ОШИБКИ[/bold yellow]")
+    console.print("\n[bold yellow]3. ХВОСТОВЫЕ ОШИБКИ[/bold yellow]")
     tail_bounds_analysis(basis, labels, ZEROS)
     
     # 4. Тест устойчивости
-    console.print(f"\n[bold yellow]4. ТЕСТ УСТОЙЧИВОСТИ[/bold yellow]")
+    console.print("\n[bold yellow]4. ТЕСТ УСТОЙЧИВОСТИ[/bold yellow]")
     is_stable, robustness_results = robustness_test(basis, labels)
     
     # Финальный вердикт

@@ -1,24 +1,26 @@
-import re
+import asyncio
+import base64
+import copy
+import hashlib
+import json
+import logging
 import os
 import random
-import json
+import re
 import time
-import asyncio
-import hashlib
-import base64
 import zlib
-import logging
-import copy
 from datetime import datetime
 from enum import Enum, auto
-from typing import Dict, Any, List, Union, Optional, Tuple, Set
-from termcolor import colored
+from typing import Any
+
 import aiofiles
-from openai import AsyncOpenAI
 from anthropic import AsyncAnthropic
-from google import genai
+from decouple import Config as DecoupleConfig
+from decouple import RepositoryEnv
 from fuzzywuzzy import fuzz
-from decouple import Config as DecoupleConfig, RepositoryEnv
+from google import genai
+from openai import AsyncOpenAI
+from termcolor import colored
 
 config = DecoupleConfig(RepositoryEnv('.env'))
 
@@ -211,7 +213,7 @@ class TokenUsageTracker:
                 category_found = True
                 break
     
-    def get_enhanced_summary(self) -> Dict[str, Any]:
+    def get_enhanced_summary(self) -> dict[str, Any]:
         """Get enhanced usage summary with category breakdowns and percentages."""
         total_calls = sum(self.call_counts.values())
         total_cost = sum(self.cost_by_task.values())
@@ -353,7 +355,7 @@ class DocumentOptimizer:
         )
         self.token_tracker = TokenUsageTracker()
         
-    async def generate_completion(self, prompt: str, max_tokens: int = 5000, request_id: str = None, task: Optional[str] = None) -> Optional[str]:
+    async def generate_completion(self, prompt: str, max_tokens: int = 5000, request_id: str = None, task: str | None = None) -> str | None:
         try:
             # Log the start of the request with truncated prompt
             prompt_preview = " ".join(prompt.split()[:40])  # Get first 40 words
@@ -469,7 +471,7 @@ class DocumentOptimizer:
 class MinimalDatabaseStub:
     """Minimal database stub that provides just enough for the mindmap generator."""
     @staticmethod
-    async def get_document_by_id(document_id: str) -> Dict[str, Any]:
+    async def get_document_by_id(document_id: str) -> dict[str, Any]:
         """Stub that returns minimal document info."""
         return {
             "id": document_id,
@@ -480,12 +482,12 @@ class MinimalDatabaseStub:
         }
         
     @staticmethod
-    async def get_optimized_text(document_id: str, request_id: str) -> Optional[str]:
+    async def get_optimized_text(document_id: str, request_id: str) -> str | None:
         """In our simplified version, this just returns the raw text content."""
         return MinimalDatabaseStub._stored_text
         
     @staticmethod
-    async def update_document_status(*args, **kwargs) -> Dict[str, Any]:
+    async def update_document_status(*args, **kwargs) -> dict[str, Any]:
         """Stub that just returns success."""
         return {"status": "success"}
         
@@ -550,7 +552,7 @@ class MindMapGenerationError(Exception):
 
 class ContentItem:
     """Class to track content items with their context information."""
-    def __init__(self, text: str, path: List[str], node_type: str, importance: str = None):
+    def __init__(self, text: str, path: list[str], node_type: str, importance: str = None):
         self.text = text
         self.path = path
         self.path_str = ' → '.join(path)
@@ -626,7 +628,7 @@ class MindMapGenerator:
         """Load emoji cache from disk if available."""
         try:
             if os.path.exists(self._emoji_file):
-                with open(self._emoji_file, 'r', encoding='utf-8') as f:
+                with open(self._emoji_file, encoding='utf-8') as f:
                     loaded_cache = json.load(f)
                     # Convert tuple string keys back to actual tuples
                     self._emoji_cache = {tuple(eval(k)): v for k, v in loaded_cache.items()}
@@ -671,7 +673,7 @@ class MindMapGenerator:
                 
                 await asyncio.sleep(actual_delay)
 
-    def _validate_parsed_response(self, parsed: Any, expected_type: str) -> Union[List[Any], Dict[str, Any]]:
+    def _validate_parsed_response(self, parsed: Any, expected_type: str) -> list[Any] | dict[str, Any]:
         """Validate and normalize parsed JSON response."""
         if expected_type == "array":
             if isinstance(parsed, list):
@@ -689,7 +691,7 @@ class MindMapGenerator:
         
         return parsed if isinstance(parsed, dict) else {}
 
-    def _clean_detail_response(self, response: str) -> List[Dict[str, str]]:
+    def _clean_detail_response(self, response: str) -> list[dict[str, str]]:
         """Clean and validate detail responses."""
         try:
             # Remove markdown code blocks if present
@@ -755,7 +757,7 @@ class MindMapGenerator:
             
         try:
             # First try to find complete JSON structure
-            def find_json_structure(text: str) -> Optional[str]:
+            def find_json_structure(text: str) -> str | None:
                 # Look for array pattern
                 array_match = re.search(r'\[[\s\S]*?\](?=\s*$|\s*[,}\]])', text)
                 if array_match:
@@ -866,7 +868,7 @@ class MindMapGenerator:
             logger.error(f"Error during JSON response cleaning: {str(e)}")
             return "[]"
 
-    def _parse_llm_response(self, response: str, expected_type: str = "array") -> Union[List[Any], Dict[str, Any]]:
+    def _parse_llm_response(self, response: str, expected_type: str = "array") -> list[Any] | dict[str, Any]:
         """Parse and validate LLM response."""
         if not response or not isinstance(response, str):
             logger.warning("Empty or invalid response type received")
@@ -1795,7 +1797,7 @@ class MindMapGenerator:
             return DocumentType.GENERAL
 
     @staticmethod
-    def _create_node(name: str, importance: str = 'high', emoji: str = "") -> Dict[str, Any]:
+    def _create_node(name: str, importance: str = 'high', emoji: str = "") -> dict[str, Any]:
         """Create a node dictionary with the given parameters.
         
         Args:
@@ -1832,7 +1834,7 @@ class MindMapGenerator:
         
         return text
 
-    def _format_node_line(self, node: Dict[str, Any], indent_level: int) -> str:
+    def _format_node_line(self, node: dict[str, Any], indent_level: int) -> str:
         """Format a single node in Mermaid syntax."""
         indent = '    ' * indent_level
         
@@ -1861,7 +1863,7 @@ class MindMapGenerator:
             # For subtopics (level 3)
             return f"{indent}({node_name})"
 
-    def _add_node_to_mindmap(self, node: Dict[str, Any], mindmap_lines: List[str], indent_level: int) -> None:
+    def _add_node_to_mindmap(self, node: dict[str, Any], mindmap_lines: list[str], indent_level: int) -> None:
         """Recursively add a node and its children to the mindmap."""
         # Add the current node
         node_line = self._format_node_line(node, indent_level)
@@ -1974,7 +1976,7 @@ class MindMapGenerator:
         
         return unique_items
 
-    async def is_similar_to_existing(self, name: str, existing_names: Union[dict, set], content_type: str = 'topic') -> bool:
+    async def is_similar_to_existing(self, name: str, existing_names: dict | set, content_type: str = 'topic') -> bool:
         """Check if name is similar to any existing names using stricter fuzzy matching thresholds.
         
         Args:
@@ -2132,7 +2134,7 @@ class MindMapGenerator:
             # Default to considering items similar if the check fails
             return True
 
-    async def _process_content_batch(self, content_items: List[ContentItem]) -> Set[int]:
+    async def _process_content_batch(self, content_items: list[ContentItem]) -> set[int]:
         """Process a batch of content items to identify redundant content with parallel processing.
         
         Args:
@@ -2321,7 +2323,7 @@ class MindMapGenerator:
         """Convert importance string to numeric value for comparison."""
         return {'high': 3, 'medium': 2, 'low': 1}.get(importance.lower(), 0)
 
-    def _extract_content_for_filtering(self, node: Dict[str, Any], current_path: List[str]) -> None:
+    def _extract_content_for_filtering(self, node: dict[str, Any], current_path: list[str]) -> None:
         """Extract all content items with their full paths for filtering."""
         if not node:
             return
@@ -2372,7 +2374,7 @@ class MindMapGenerator:
             for subtopic in node.get('subtopics', []):
                 self._extract_content_for_filtering(subtopic, current_path)
 
-    async def final_pass_filter_for_duplicative_content(self, mindmap_data: Dict[str, Any], batch_size: int = 50) -> Dict[str, Any]:
+    async def final_pass_filter_for_duplicative_content(self, mindmap_data: dict[str, Any], batch_size: int = 50) -> dict[str, Any]:
         """Enhanced filter for duplicative content with more aggressive detection and safer rebuilding."""
         USE_VERBOSE = True  # Toggle for verbose logging
         
@@ -2465,7 +2467,7 @@ class MindMapGenerator:
         # Rebuild the mindmap with only the paths to keep
         vlog("\n🏗️ Rebuilding mindmap...", 'yellow', True)
         
-        def rebuild_mindmap(node: Dict[str, Any], current_path: List[str]) -> Optional[Dict[str, Any]]:
+        def rebuild_mindmap(node: dict[str, Any], current_path: list[str]) -> dict[str, Any] | None:
             """Recursively rebuild mindmap keeping only non-redundant content."""
             # Add special case for root node
             if not node:
@@ -2922,7 +2924,7 @@ class MindMapGenerator:
             logger.error(f"Error in mindmap generation: {str(e)}", extra={"request_id": request_id})
             raise MindMapGenerationError(f"Failed to generate mindmap: {str(e)}")
 
-    async def _extract_main_topics(self, content: str, topics_prompt: str, request_id: str) -> List[Dict[str, Any]]:
+    async def _extract_main_topics(self, content: str, topics_prompt: str, request_id: str) -> list[dict[str, Any]]:
         """Extract main topics using LLM with more aggressive deduplication and content preservation.
         
         Args:
@@ -2940,7 +2942,7 @@ class MindMapGenerator:
         MIN_TOPICS = 4  # Minimum topics to process
         MAX_CONCURRENT_TASKS = 50  # Limit concurrent LLM calls
         
-        async def extract_from_chunk(chunk: str) -> List[Dict[str, Any]]:
+        async def extract_from_chunk(chunk: str) -> list[dict[str, Any]]:
             """Extract topics from a single content chunk."""
             consolidated_prompt = f"""You are an expert at identifying unique, distinct main topics within content.
                         
@@ -3035,7 +3037,7 @@ class MindMapGenerator:
             unique_topics_seen = set()
             max_chunks_to_process = 5  # Increased from 3
 
-            async def process_chunk(chunk: str, chunk_idx: int) -> List[Dict[str, Any]]:
+            async def process_chunk(chunk: str, chunk_idx: int) -> list[dict[str, Any]]:
                 """Process a single chunk with semaphore control."""
                 if chunk_idx >= max_chunks_to_process:
                     return []
@@ -3234,7 +3236,7 @@ class MindMapGenerator:
             logger.error(error_msg, extra={"request_id": request_id})
             raise MindMapGenerationError(error_msg)
 
-    async def _extract_subtopics(self, topic: Dict[str, Any], content: str, subtopics_prompt_template: str, request_id: str) -> List[Dict[str, Any]]:
+    async def _extract_subtopics(self, topic: dict[str, Any], content: str, subtopics_prompt_template: str, request_id: str) -> list[dict[str, Any]]:
         """Extract subtopics using LLM with more aggressive deduplication and content preservation."""
         MAX_SUBTOPICS = self.config['max_subtopics']
         MAX_CONCURRENT_TASKS = 50  # Limit concurrent LLM calls
@@ -3251,7 +3253,7 @@ class MindMapGenerator:
         if topic['name'] not in self._processed_chunks_by_topic:
             self._processed_chunks_by_topic[topic['name']] = set()
 
-        async def extract_from_chunk(chunk: str) -> List[Dict[str, Any]]:
+        async def extract_from_chunk(chunk: str) -> list[dict[str, Any]]:
             chunk_hash = hashlib.md5(chunk.encode()).hexdigest()
             if chunk_hash in self._processed_chunks_by_topic[topic['name']]:
                 return []
@@ -3337,7 +3339,7 @@ class MindMapGenerator:
             seen_names = {}
             all_subtopics = []
             
-            async def process_chunk(chunk: str) -> List[Dict[str, Any]]:
+            async def process_chunk(chunk: str) -> list[dict[str, Any]]:
                 """Process a single chunk with semaphore control."""
                 async with semaphore:
                     return await self._retry_with_exponential_backoff(
@@ -3461,7 +3463,7 @@ class MindMapGenerator:
                         extra={"request_id": request_id})
             return []
 
-    def _validate_detail(self, detail: Dict[str, Any]) -> bool:
+    def _validate_detail(self, detail: dict[str, Any]) -> bool:
         """Validate a single detail entry with more flexible constraints."""
         try:
             # Basic structure validation
@@ -3496,7 +3498,7 @@ class MindMapGenerator:
             logger.debug(f"Validation error: {str(e)}")
             return False
 
-    async def _extract_details(self, subtopic: Dict[str, Any], content: str, details_prompt_template: str, request_id: str) -> List[Dict[str, Any]]:
+    async def _extract_details(self, subtopic: dict[str, Any], content: str, details_prompt_template: str, request_id: str) -> list[dict[str, Any]]:
         """Extract details for a subtopic with more aggressive deduplication and content preservation."""
         MINIMUM_VALID_DETAILS = 5  # Early stopping threshold
         MAX_DETAILS = self.config['max_details']
@@ -3518,7 +3520,7 @@ class MindMapGenerator:
         if not hasattr(self, '_current_details'):
             self._current_details = []
 
-        async def extract_from_chunk(chunk: str) -> List[Dict[str, Any]]:
+        async def extract_from_chunk(chunk: str) -> list[dict[str, Any]]:
             chunk_hash = hashlib.md5(chunk.encode()).hexdigest()
             if chunk_hash in self._processed_chunks_by_subtopic[subtopic['name']]:
                 return []
@@ -3602,7 +3604,7 @@ class MindMapGenerator:
             all_details = []
             early_stop = asyncio.Event()
 
-            async def process_chunk(chunk: str) -> List[Dict[str, Any]]:
+            async def process_chunk(chunk: str) -> list[dict[str, Any]]:
                 """Process a single chunk with semaphore control."""
                 if early_stop.is_set():
                     return []
@@ -3792,7 +3794,7 @@ class MindMapGenerator:
                 logger.warning(f"Retrying {task} ({retries}/{self.config['max_retries']}) after {delay}s: {str(e)}", extra={"request_id": request_id})
                 await asyncio.sleep(delay)
 
-    async def verify_mindmap_against_source(self, mindmap_data: Dict[str, Any], original_document: str) -> Dict[str, Any]:
+    async def verify_mindmap_against_source(self, mindmap_data: dict[str, Any], original_document: str) -> dict[str, Any]:
         """Verify all mindmap nodes against the original document with lenient criteria and improved error handling."""
         try:
             logger.info("\n" + "="*80)
@@ -4074,15 +4076,7 @@ class MindMapGenerator:
                     
                     for n in all_nodes:
                         # First try to match by direct object reference
-                        if n.get('node_ref') is subtopic and n.get('verified', False):
-                            subtopic_verified = True
-                            break
-                        # Fallback to matching by object ID if reference comparison fails
-                        elif n.get('node_id') == subtopic_id and n.get('verified', False):
-                            subtopic_verified = True
-                            break
-                        # Last resort: match by name and path
-                        elif (n.get('type') in ['topic', 'subtopic'] and 
+                        if n.get('node_ref') is subtopic and n.get('verified', False) or n.get('node_id') == subtopic_id and n.get('verified', False) or (n.get('type') in ['topic', 'subtopic'] and 
                             n.get('text') == subtopic.get('name') and 
                             n.get('verified', False)):
                             subtopic_verified = True
@@ -4108,15 +4102,7 @@ class MindMapGenerator:
                         
                         for n in all_nodes:
                             # First try to match by direct object reference
-                            if n.get('node_ref') is detail and n.get('verified', False):
-                                detail_verified = True
-                                break
-                            # Fallback to matching by object ID
-                            elif n.get('node_id') == detail_id and n.get('verified', False):
-                                detail_verified = True
-                                break
-                            # Last resort: match by text content
-                            elif n.get('type') == 'detail' and n.get('text') == detail.get('text') and n.get('verified', False):
+                            if n.get('node_ref') is detail and n.get('verified', False) or n.get('node_id') == detail_id and n.get('verified', False) or n.get('type') == 'detail' and n.get('text') == detail.get('text') and n.get('verified', False):
                                 detail_verified = True
                                 break
                         
@@ -4160,7 +4146,7 @@ class MindMapGenerator:
             # Return the original mindmap in case of any errors
             return mindmap_data
 
-    def _generate_mermaid_mindmap(self, concepts: Dict[str, Any]) -> str:
+    def _generate_mermaid_mindmap(self, concepts: dict[str, Any]) -> str:
         """Generate complete Mermaid mindmap syntax from concepts.
         
         Args:
@@ -4313,7 +4299,7 @@ def generate_mermaid_html(mermaid_code):
 </html>'''
     return html_template
 
-async def generate_document_mindmap(document_id: str, request_id: str) -> Tuple[str, str]:
+async def generate_document_mindmap(document_id: str, request_id: str) -> tuple[str, str]:
     """Generate both Mermaid mindmap and Markdown outline for a document.
     
     Args:
@@ -4379,7 +4365,7 @@ async def process_text_file(filepath: str):
     logger = get_logger()
     try:
         # Read the input file
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             content = f.read()
         # Store content in our stub database
         MinimalDatabaseStub.store_text(content)

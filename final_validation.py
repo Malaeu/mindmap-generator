@@ -5,13 +5,14 @@ FINAL COMPREHENSIVE VALIDATION
 Ensuring the 94% success rate is mathematically valid
 """
 
-import numpy as np
-from fourier_conventions import compute_Q_weil, sieve_primes
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich import box
 import matplotlib.pyplot as plt
+import numpy as np
+from rich import box
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+
+from fourier_conventions import compute_Q_weil, sieve_primes
 
 console = Console()
 
@@ -87,7 +88,7 @@ def run_final_validation():
     # Analysis
     success_rate = positive_count / len(sigmas)
     
-    console.print(f"[bold]RESULTS:[/bold]")
+    console.print("[bold]RESULTS:[/bold]")
     console.print(f"  Total tested: {len(sigmas)} Gaussians")
     console.print(f"  ✅ Positive Q: {positive_count}/{len(sigmas)} ({success_rate:.1%})")
     console.print(f"  ❌ Negative Q: {len(sigmas)-positive_count}/{len(sigmas)} ({(1-success_rate):.1%})")
@@ -99,20 +100,20 @@ def run_final_validation():
             transitions.append((results[i-1]['sigma'], results[i]['sigma']))
     
     if transitions:
-        console.print(f"\n[bold yellow]TRANSITION REGIONS:[/bold yellow]")
+        console.print("\n[bold yellow]TRANSITION REGIONS:[/bold yellow]")
         for s1, s2 in transitions:
             mid = (s1 + s2) / 2
             console.print(f"  Sign change between σ={s1:.2f} and σ={s2:.2f} (≈{mid:.2f})")
     
     # Check Parseval errors
     max_parseval = max(r['parseval_error'] for r in results)
-    console.print(f"\n[bold]NUMERICAL QUALITY:[/bold]")
+    console.print("\n[bold]NUMERICAL QUALITY:[/bold]")
     console.print(f"  Max Parseval error: {max_parseval:.2e}")
     
     if max_parseval > 1e-6:
-        console.print(f"  [yellow]⚠️  Parseval errors above threshold[/yellow]")
+        console.print("  [yellow]⚠️  Parseval errors above threshold[/yellow]")
     else:
-        console.print(f"  [green]✅ Parseval errors within tolerance[/green]")
+        console.print("  [green]✅ Parseval errors within tolerance[/green]")
     
     # Detailed table for key points
     console.print("\n[bold]KEY POINTS:[/bold]")
@@ -217,7 +218,7 @@ def create_validation_plot(results):
     
     # Plot 4: Component balance
     ax4 = axes[1, 1]
-    balance = [abs(z) / (abs(a) + abs(p) + 1e-10) for z, a, p in zip(z_values, a_values, p_values)]
+    balance = [abs(z) / (abs(a) + abs(p) + 1e-10) for z, a, p in zip(z_values, a_values, p_values, strict=False)]
     ax4.plot(sigmas, balance, 'purple', linewidth=2)
     ax4.set_xlabel('σ', fontsize=12)
     ax4.set_ylabel('|Z| / (|A| + |P|)', fontsize=12)
@@ -258,7 +259,7 @@ def verify_critical_properties():
     
     if is_linear:
         console.print(f"  ✅ Q(h₁+h₂) = Q(h₁)+Q(h₂): {Q_sum:.4f} ≈ {Q1+Q2:.4f}")
-        console.print(f"     Q is linear as mathematically expected")
+        console.print("     Q is linear as mathematically expected")
         tests_passed.append(True)
     else:
         console.print(f"  ❌ Q not linear (unexpected!): {Q_sum:.4f} ≠ {Q1+Q2:.4f}")
@@ -339,16 +340,16 @@ def main():
     console.print("[bold green]FINAL VERDICT:[/bold green]\n")
     
     if success_rate >= 0.90:  # 90% threshold
-        console.print(f"✅ [bold green]VALIDATION SUCCESSFUL![/bold green]")
+        console.print("✅ [bold green]VALIDATION SUCCESSFUL![/bold green]")
         console.print(f"   {success_rate:.1%} of Gaussians satisfy Q ≥ 0")
-        console.print(f"   This is strong numerical evidence for RH in this class")
-        console.print(f"\n[cyan]The Weil criterion Q ≥ 0 holds for the vast majority[/cyan]")
-        console.print(f"[cyan]of the Gaussian family, as mathematically expected.[/cyan]")
+        console.print("   This is strong numerical evidence for RH in this class")
+        console.print("\n[cyan]The Weil criterion Q ≥ 0 holds for the vast majority[/cyan]")
+        console.print("[cyan]of the Gaussian family, as mathematically expected.[/cyan]")
         return True
     else:
-        console.print(f"❌ [bold red]VALIDATION CONCERNS[/bold red]")
+        console.print("❌ [bold red]VALIDATION CONCERNS[/bold red]")
         console.print(f"   Only {success_rate:.1%} of Gaussians satisfy Q ≥ 0")
-        console.print(f"   This requires further investigation")
+        console.print("   This requires further investigation")
         return False
 
 if __name__ == "__main__":

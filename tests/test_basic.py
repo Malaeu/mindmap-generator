@@ -1,15 +1,15 @@
 """Basic tests for the agentic mindmap system."""
 
 import asyncio
-import pytest
-from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.core.types import DocumentType, Topic, Subtopic, Detail
+import pytest
+
 from src.agents.document_agent import DocumentAnalyzer
 from src.agents.extraction_agent import TopicExtractor
 from src.agents.verification_agent import VerificationAgent
 from src.agents.visualization_agent import VisualizationAgent
+from src.core.types import Detail, DocumentType, Subtopic, Topic
 
 
 # Create a mock LLM provider for testing

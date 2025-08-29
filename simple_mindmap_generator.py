@@ -2,11 +2,8 @@
 """Generate mindmap from conversation about mathematical infinity - no API required."""
 
 import re
-import json
-from collections import defaultdict, Counter
-from pathlib import Path
-from typing import Dict, List, Set, Tuple
-import hashlib
+from collections import Counter, defaultdict
+
 
 class ConversationMindmapGenerator:
     """Generate mindmap from conversation using text analysis."""
@@ -16,7 +13,7 @@ class ConversationMindmapGenerator:
         self.key_concepts = set()
         self.relationships = []
         
-    def extract_key_concepts(self, text: str) -> List[str]:
+    def extract_key_concepts(self, text: str) -> list[str]:
         """Extract mathematical and technical concepts from text."""
         
         # Mathematical concepts to look for
@@ -115,9 +112,7 @@ class ConversationMindmapGenerator:
                     concepts.append('Automorphic Forms')
                 elif 'галуа' in concept.lower() or 'galois' in concept.lower():
                     concepts.append('Galois Representations')
-                elif 'явн' in concept.lower() and 'формул' in concept.lower():
-                    concepts.append('Explicit Formula')
-                elif 'explicit' in concept.lower() and 'formula' in concept.lower():
+                elif 'явн' in concept.lower() and 'формул' in concept.lower() or 'explicit' in concept.lower() and 'formula' in concept.lower():
                     concepts.append('Explicit Formula')
                 elif 'функциональн' in concept.lower() and 'уравнен' in concept.lower():
                     concepts.append('Functional Equation')
@@ -155,7 +150,7 @@ class ConversationMindmapGenerator:
     def analyze_conversation(self, markdown_file: str):
         """Analyze conversation and extract structure."""
         
-        with open(markdown_file, 'r', encoding='utf-8') as f:
+        with open(markdown_file, encoding='utf-8') as f:
             content = f.read()
         
         # Split by messages

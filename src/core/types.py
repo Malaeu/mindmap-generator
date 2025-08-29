@@ -1,7 +1,8 @@
 """Core type definitions for the mindmap generator."""
 
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -21,8 +22,8 @@ class Topic(BaseModel):
     """A main topic extracted from the document."""
     
     name: str
-    emoji: Optional[str] = None
-    subtopics: List['Subtopic'] = Field(default_factory=list)
+    emoji: str | None = None
+    subtopics: list['Subtopic'] = Field(default_factory=list)
     verified: bool = False
     confidence: float = 1.0
 
@@ -31,10 +32,10 @@ class Subtopic(BaseModel):
     """A subtopic under a main topic."""
     
     name: str
-    emoji: Optional[str] = None
-    details: List['Detail'] = Field(default_factory=list)
+    emoji: str | None = None
+    details: list['Detail'] = Field(default_factory=list)
     verified: bool = False
-    parent_topic: Optional[str] = None
+    parent_topic: str | None = None
 
 
 class Detail(BaseModel):
@@ -42,9 +43,9 @@ class Detail(BaseModel):
     
     text: str
     importance: str = "medium"  # high, medium, low
-    emoji: Optional[str] = None
+    emoji: str | None = None
     verified: bool = False
-    parent_subtopic: Optional[str] = None
+    parent_subtopic: str | None = None
 
 
 class MindmapData(BaseModel):
@@ -55,7 +56,7 @@ class MindmapData(BaseModel):
     total_topics: int = 0
     total_subtopics: int = 0
     total_details: int = 0
-    generation_metadata: Dict[str, Any] = Field(default_factory=dict)
+    generation_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ChunkMetadata(BaseModel):
@@ -65,7 +66,7 @@ class ChunkMetadata(BaseModel):
     start_position: int
     end_position: int
     overlap_size: int = 0
-    hash: Optional[str] = None
+    hash: str | None = None
     processed: bool = False
 
 
@@ -73,10 +74,10 @@ class ExtractionResult(BaseModel):
     """Result from an extraction operation."""
     
     success: bool
-    data: Optional[Any] = None
-    error: Optional[str] = None
-    tokens_used: Dict[str, int] = Field(default_factory=dict)
-    duration_ms: Optional[float] = None
+    data: Any | None = None
+    error: str | None = None
+    tokens_used: dict[str, int] = Field(default_factory=dict)
+    duration_ms: float | None = None
 
 
 # Enable forward references

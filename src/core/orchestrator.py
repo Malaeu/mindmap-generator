@@ -3,18 +3,17 @@
 import asyncio
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from src.agents.document_agent import DocumentAnalyzer
-from src.agents.extraction_agent import TopicExtractor, SubtopicExtractor, DetailExtractor
+from src.agents.extraction_agent import DetailExtractor, SubtopicExtractor, TopicExtractor
 from src.agents.verification_agent import VerificationAgent
 from src.agents.visualization_agent import VisualizationAgent
-from src.core.types import DocumentType, MindmapData, Topic
+from src.core.types import DocumentType, Topic
 from src.utils.tracker import TokenUsageTracker
-
 
 console = Console()
 
@@ -24,7 +23,7 @@ class MindmapOrchestrator:
     
     def __init__(
         self,
-        llm_provider: Optional[Any] = None,
+        llm_provider: Any | None = None,
         provider_name: str = "OPENAI",
         max_concurrent_tasks: int = 10,
         cache_enabled: bool = True
@@ -72,9 +71,9 @@ class MindmapOrchestrator:
     async def generate_mindmap(
         self,
         document_content: str,
-        output_dir: Optional[Path] = None,
-        filename_prefix: Optional[str] = None
-    ) -> Dict[str, Any]:
+        output_dir: Path | None = None,
+        filename_prefix: str | None = None
+    ) -> dict[str, Any]:
         """Generate a complete mindmap from document content.
         
         Args:
@@ -221,9 +220,9 @@ class MindmapOrchestrator:
     
     async def _extract_topics_from_chunks(
         self,
-        chunks: List[Dict],
+        chunks: list[dict],
         doc_type: DocumentType
-    ) -> List[Topic]:
+    ) -> list[Topic]:
         """Extract topics from document chunks."""
         # Combine first few chunks for topic extraction
         combined_content = "\n\n".join([
@@ -242,10 +241,10 @@ class MindmapOrchestrator:
     
     async def _extract_subtopics_parallel(
         self,
-        topics: List[Topic],
-        chunks: List[Dict],
+        topics: list[Topic],
+        chunks: list[dict],
         doc_type: DocumentType
-    ) -> List[Topic]:
+    ) -> list[Topic]:
         """Extract subtopics for all topics in parallel."""
         # Combine chunks for context
         combined_content = "\n\n".join([
@@ -292,9 +291,9 @@ class MindmapOrchestrator:
     
     async def _extract_details_parallel(
         self,
-        topics: List[Topic],
-        chunks: List[Dict]
-    ) -> List[Topic]:
+        topics: list[Topic],
+        chunks: list[dict]
+    ) -> list[Topic]:
         """Extract details for all subtopics in parallel."""
         # Get relevant content for detail extraction
         detail_content = "\n\n".join([
@@ -348,7 +347,7 @@ class MindmapOrchestrator:
     
     async def _save_outputs(
         self,
-        visualizations: Dict,
+        visualizations: dict,
         output_dir: Path,
         filename_prefix: str
     ):

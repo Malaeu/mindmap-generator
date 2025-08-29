@@ -4,20 +4,20 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.orchestrator import MindmapOrchestrator
-from src.providers.factory import create_llm_provider, get_provider_config
+from src.providers.factory import create_llm_provider
 
 
 async def generate_mindmap_from_file(
     file_path: str,
     provider: str = "OPENAI",
-    output_dir: Optional[str] = None
-) -> Dict[str, Any]:
+    output_dir: str | None = None
+) -> dict[str, Any]:
     """Generate mindmap from a file - entry point for Claude Code.
     
     Args:
@@ -45,7 +45,7 @@ async def generate_mindmap_from_file(
     
     try:
         # Read document
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
         
         # Create provider
@@ -78,8 +78,8 @@ async def generate_mindmap_from_text(
     text: str,
     provider: str = "OPENAI",
     output_filename: str = "mindmap",
-    output_dir: Optional[str] = None
-) -> Dict[str, Any]:
+    output_dir: str | None = None
+) -> dict[str, Any]:
     """Generate mindmap from text content - for Claude Code inline usage.
     
     Args:
@@ -121,9 +121,9 @@ async def generate_mindmap_from_text(
 def mindmap_command(
     file_or_text: str,
     provider: str = "OPENAI",
-    output_dir: Optional[str] = None,
+    output_dir: str | None = None,
     is_file: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Synchronous wrapper for Claude Code integration.
     
     This function can be called directly from Claude Code as:

@@ -1,10 +1,9 @@
 """Factory for creating LLM provider instances."""
 
-from typing import Any, Optional
+from typing import Any
+
 from decouple import config
-
 from rich.console import Console
-
 
 console = Console()
 

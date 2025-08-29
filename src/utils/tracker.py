@@ -1,10 +1,7 @@
 """Token usage tracking for cost optimization."""
 
-from typing import Dict, Optional
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
-
 
 console = Console()
 
@@ -42,9 +39,9 @@ class TokenUsageTracker:
         self.total_input_tokens = 0
         self.total_output_tokens = 0
         self.total_cost = 0.0
-        self.call_counts: Dict[str, int] = {}
-        self.token_counts_by_task: Dict[str, Dict[str, int]] = {}
-        self.cost_by_task: Dict[str, float] = {}
+        self.call_counts: dict[str, int] = {}
+        self.token_counts_by_task: dict[str, dict[str, int]] = {}
+        self.cost_by_task: dict[str, float] = {}
         
         # Task categories for reporting
         self.task_categories = {
@@ -183,7 +180,7 @@ class TokenUsageTracker:
         
         console.print("\n" + "=" * 80)
     
-    def get_summary(self) -> Dict:
+    def get_summary(self) -> dict:
         """Get summary statistics."""
         return {
             "total_input_tokens": self.total_input_tokens,

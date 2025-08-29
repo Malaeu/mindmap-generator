@@ -5,12 +5,12 @@
 Где именно Q переходит через 0?
 """
 
-import numpy as np
-from scipy import special, integrate
 import matplotlib.pyplot as plt
+import numpy as np
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
+from scipy import integrate, special
 
 console = Console()
 

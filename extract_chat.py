@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Extract chat conversation from HTML and convert to Markdown for mindmap generation."""
 
-import re
-from pathlib import Path
-from bs4 import BeautifulSoup
 import html
+
+from bs4 import BeautifulSoup
+
 
 def extract_chat_to_markdown(html_file: str, output_file: str):
     """Extract chat messages from HTML and convert to clean Markdown."""
     
-    with open(html_file, 'r', encoding='utf-8') as f:
+    with open(html_file, encoding='utf-8') as f:
         soup = BeautifulSoup(f.read(), 'html.parser')
     
     # Extract title

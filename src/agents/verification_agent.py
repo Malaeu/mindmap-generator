@@ -1,14 +1,13 @@
 """Verification agent for reality checking and deduplication."""
 
 import asyncio
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from rich.console import Console
 from fuzzywuzzy import fuzz
+from rich.console import Console
 
 from src.agents.base_agent import BaseAgent
-from src.core.types import Detail, ExtractionResult, Subtopic, Topic
-
+from src.core.types import ExtractionResult
 
 console = Console()
 
@@ -33,7 +32,7 @@ class VerificationAgent(BaseAgent):
         # Verification confidence threshold
         self.verification_confidence_threshold = 0.7
     
-    async def process(self, input_data: Dict, **kwargs) -> ExtractionResult:
+    async def process(self, input_data: dict, **kwargs) -> ExtractionResult:
         """Verify and deduplicate mindmap content.
         
         Args:
@@ -74,7 +73,7 @@ class VerificationAgent(BaseAgent):
                 error=str(e)
             )
     
-    async def _deduplicate_mindmap(self, mindmap_data: Dict) -> Dict:
+    async def _deduplicate_mindmap(self, mindmap_data: dict) -> dict:
         """Remove duplicate content at all levels."""
         if not mindmap_data:
             return mindmap_data
@@ -122,10 +121,10 @@ class VerificationAgent(BaseAgent):
     
     def _deduplicate_items(
         self,
-        items: List[Dict],
+        items: list[dict],
         key_func,
         threshold: float
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Deduplicate a list of items based on similarity."""
         if not items:
             return items
@@ -158,9 +157,9 @@ class VerificationAgent(BaseAgent):
     
     async def _verify_against_source(
         self,
-        mindmap_data: Dict,
+        mindmap_data: dict,
         source_doc: str
-    ) -> Dict:
+    ) -> dict:
         """Verify extracted content against source document."""
         console.print("[blue]  📋 Reality checking against source...[/blue]")
         
@@ -213,7 +212,7 @@ class VerificationAgent(BaseAgent):
             )
             
             # Update verification status
-            for item, verified in zip(batch, verification_results):
+            for item, verified in zip(batch, verification_results, strict=False):
                 item['node']['verified'] = verified
                 if verified:
                     verified_count += 1
@@ -227,7 +226,7 @@ class VerificationAgent(BaseAgent):
         self,
         items_text: str,
         source_excerpt: str
-    ) -> List[bool]:
+    ) -> list[bool]:
         """Verify a batch of items against source."""
         prompt = f"""Verify if these extracted items accurately represent content from the source document.
 
@@ -260,7 +259,7 @@ Example: [true, false, true, true, false]"""
         console.print("[yellow]  ⚠️  Could not parse verification results, assuming verified[/yellow]")
         return [True] * len(items_text.split('\n'))
     
-    def _calculate_stats(self, original: Dict, processed: Dict) -> Dict:
+    def _calculate_stats(self, original: dict, processed: dict) -> dict:
         """Calculate processing statistics."""
         def count_items(data):
             counts = {'topics': 0, 'subtopics': 0, 'details': 0}

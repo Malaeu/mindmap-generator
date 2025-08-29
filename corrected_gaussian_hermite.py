@@ -5,11 +5,12 @@
 Правильная нормировка под конвенцией ĥ(ξ) = ∫h(t)e^{-iξt}dt
 """
 
-import numpy as np
 from math import pi, sqrt
-from scipy import integrate
+
+import numpy as np
 from numpy.polynomial.hermite import hermval
 from rich.console import Console
+from scipy import integrate
 
 console = Console()
 
@@ -144,9 +145,9 @@ def test_corrected_hermite_pairs():
     console.print(table)
     
     if all_good:
-        console.print(f"\n[bold green]✅ Все исправленные пары прошли проверку![/bold green]")
+        console.print("\n[bold green]✅ Все исправленные пары прошли проверку![/bold green]")
     else:
-        console.print(f"\n[bold red]❌ Некоторые пары все еще имеют проблемы[/bold red]")
+        console.print("\n[bold red]❌ Некоторые пары все еще имеют проблемы[/bold red]")
     
     return all_good
 
@@ -171,10 +172,10 @@ if __name__ == "__main__":
     console.print(f"Новая реализация: Parseval error = {new_error:.2e}")
     
     # Полный тест
-    console.print(f"\n" + "="*50)
+    console.print("\n" + "="*50)
     success = test_corrected_hermite_pairs()
     
     if success:
-        console.print(f"\n[bold green]ГОТОВО: можно использовать исправленную реализацию![/bold green]")
+        console.print("\n[bold green]ГОТОВО: можно использовать исправленную реализацию![/bold green]")
     else:
-        console.print(f"\n[bold red]ТРЕБУЕТСЯ дополнительная отладка[/bold red]")
+        console.print("\n[bold red]ТРЕБУЕТСЯ дополнительная отладка[/bold red]")

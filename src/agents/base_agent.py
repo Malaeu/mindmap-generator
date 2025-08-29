@@ -5,13 +5,12 @@ import hashlib
 import json
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 
 from src.core.types import ExtractionResult
 from src.utils.tracker import TokenUsageTracker
-
 
 console = Console()
 
@@ -24,7 +23,7 @@ class BaseAgent(ABC):
         name: str,
         description: str,
         llm_provider: Any,
-        token_tracker: Optional[TokenUsageTracker] = None,
+        token_tracker: TokenUsageTracker | None = None,
         max_retries: int = 3,
         cache_enabled: bool = True
     ):
@@ -44,7 +43,7 @@ class BaseAgent(ABC):
         self.token_tracker = token_tracker or TokenUsageTracker()
         self.max_retries = max_retries
         self.cache_enabled = cache_enabled
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
         self._call_count = 0
         
         console.print(f"[green]✅ Initialized agent: {name}[/green]")
@@ -67,7 +66,7 @@ class BaseAgent(ABC):
         prompt: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
-        task_name: Optional[str] = None
+        task_name: str | None = None
     ) -> str:
         """Call LLM with retry logic and token tracking.
         
@@ -184,7 +183,7 @@ class BaseAgent(ABC):
             console.print(f"[yellow]⚠️  {self.name}: Could not parse JSON, returning as text[/yellow]")
             return [{"text": response}]
     
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get agent statistics."""
         return {
             "name": self.name,

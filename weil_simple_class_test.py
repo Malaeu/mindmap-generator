@@ -5,12 +5,13 @@
 Фокусируемся на чистых гауссианах для чёткого результата
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
-from fourier_conventions import GaussianPair, compute_Q_weil
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
-import matplotlib.pyplot as plt
+
+from fourier_conventions import compute_Q_weil
 
 console = Console()
 
@@ -83,7 +84,7 @@ def test_gaussian_class():
     
     success_rate = positive_count / len(sigmas)
     
-    console.print(f"\n[bold]Статистика класса:[/bold]")
+    console.print("\n[bold]Статистика класса:[/bold]")
     console.print(f"  ✅ Положительных Q: {positive_count}/{len(sigmas)}")
     console.print(f"  📊 Процент успеха: {success_rate:.1%}")
     
@@ -105,7 +106,7 @@ def test_gaussian_class():
         negative_regions.append((current_start, sigmas[-1]))
     
     if negative_regions:
-        console.print(f"\n[red]Области где Q < 0:[/red]")
+        console.print("\n[red]Области где Q < 0:[/red]")
         for start, end in negative_regions:
             console.print(f"  σ ∈ [{start:.1f}, {end:.1f}]")
     
@@ -123,14 +124,14 @@ def test_gaussian_class():
             break
     
     if positive_start is not None and positive_end is not None:
-        console.print(f"\n[green]Основная область Q > 0:[/green]")
+        console.print("\n[green]Основная область Q > 0:[/green]")
         console.print(f"  σ ∈ [{positive_start:.1f}, {positive_end:.1f}]")
     
     return results, success_rate
 
 def robustness_test(results, zero_counts=[15, 30]):
     """Тест устойчивости при разном количестве нулей"""
-    console.print(f"\n[bold yellow]ТЕСТ УСТОЙЧИВОСТИ:[/bold yellow]")
+    console.print("\n[bold yellow]ТЕСТ УСТОЙЧИВОСТИ:[/bold yellow]")
     
     # Берём несколько хороших σ
     good_sigmas = [r['sigma'] for r in results if r['Q'] > 0][:10]

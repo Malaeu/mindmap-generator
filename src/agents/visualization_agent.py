@@ -4,13 +4,12 @@ import base64
 import json
 import re
 import zlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 
 from src.agents.base_agent import BaseAgent
 from src.core.types import ExtractionResult
-
 
 console = Console()
 
@@ -38,7 +37,7 @@ class VisualizationAgent(BaseAgent):
             'low': '▪️'
         }
     
-    async def process(self, input_data: Dict, **kwargs) -> ExtractionResult:
+    async def process(self, input_data: dict, **kwargs) -> ExtractionResult:
         """Generate visualizations from mindmap data.
         
         Args:
@@ -80,7 +79,7 @@ class VisualizationAgent(BaseAgent):
                 error=str(e)
             )
     
-    async def _add_emojis(self, mindmap_data: Dict):
+    async def _add_emojis(self, mindmap_data: dict):
         """Add emojis to mindmap nodes."""
         central_theme = mindmap_data.get('central_theme', {})
         
@@ -145,7 +144,7 @@ class VisualizationAgent(BaseAgent):
         # Default by type
         return self.default_emojis.get(node_type, '📌')
     
-    def _generate_mermaid(self, mindmap_data: Dict) -> str:
+    def _generate_mermaid(self, mindmap_data: dict) -> str:
         """Generate Mermaid mindmap syntax."""
         lines = ["mindmap"]
         
@@ -161,8 +160,8 @@ class VisualizationAgent(BaseAgent):
     
     def _add_mermaid_node(
         self,
-        node: Dict,
-        lines: List[str],
+        node: dict,
+        lines: list[str],
         indent_level: int
     ):
         """Recursively add nodes to Mermaid diagram."""
@@ -342,7 +341,7 @@ class VisualizationAgent(BaseAgent):
         
         return markdown.strip()
     
-    def _count_nodes(self, mindmap_data: Dict) -> Dict:
+    def _count_nodes(self, mindmap_data: dict) -> dict:
         """Count nodes at each level."""
         counts = {'topics': 0, 'subtopics': 0, 'details': 0}
         

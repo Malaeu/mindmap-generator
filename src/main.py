@@ -2,23 +2,20 @@
 """Main entry point for the agentized mindmap generator."""
 
 import asyncio
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
-from rich.console import Console
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
 from decouple import config
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
+from rich.text import Text
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.orchestrator import MindmapOrchestrator
 from src.providers.factory import create_llm_provider
-
 
 console = Console()
 
@@ -43,7 +40,7 @@ def print_banner():
 async def process_document(
     file_path: Path,
     provider: str,
-    output_dir: Optional[Path] = None
+    output_dir: Path | None = None
 ) -> bool:
     """Process a single document file.
     
@@ -58,7 +55,7 @@ async def process_document(
     try:
         # Read document
         console.print(f"\n📖 Reading document: [yellow]{file_path}[/yellow]")
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
         
         console.print(f"  Size: [green]{len(content):,} characters[/green]")
@@ -183,7 +180,7 @@ async def interactive_mode():
 async def batch_mode(
     input_pattern: str,
     provider: str,
-    output_dir: Optional[str] = None
+    output_dir: str | None = None
 ):
     """Process multiple documents matching a pattern.
     
@@ -215,7 +212,7 @@ async def batch_mode(
     
     # Summary
     console.print("\n" + "=" * 80)
-    console.print(f"[bold]Batch Processing Complete[/bold]")
+    console.print("[bold]Batch Processing Complete[/bold]")
     console.print(f"  Success: [green]{success_count}/{len(files)}[/green]")
     console.print(f"  Failed: [red]{len(files) - success_count}/{len(files)}[/red]")
 

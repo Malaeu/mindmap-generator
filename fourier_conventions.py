@@ -5,10 +5,10 @@
 Все файлы должны использовать ТОЛЬКО эти эталонные функции
 """
 
+from math import exp, log, pi, sqrt
+
 import numpy as np
-from math import pi, sqrt, log, exp
-from scipy import special, integrate
-from scipy.fft import fft, ifft, fftshift, ifftshift
+from scipy import integrate, special
 
 # ==================== ЭТАЛОННАЯ КОНВЕНЦИЯ ====================
 
