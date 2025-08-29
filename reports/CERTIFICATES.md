@@ -1,5 +1,7 @@
 # Certified Validation Summaries
 
+Архив полного пакета (five-pro): `five_pro_20250829_131418/phase_2.zip`
+
 
 ## autocorr.json
 
